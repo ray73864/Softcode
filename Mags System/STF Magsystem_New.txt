@@ -1,0 +1,233 @@
+CREATE TABLE `tblMagMagazines` (
+  `MagID` int(11) NOT NULL auto_increment,
+  `Alias` varchar(5) NOT NULL,
+  `Name` varchar(50) NOT NULL,
+  `Description` text,
+  `IC` tinyint(1) default '0',
+  `Private` tinyint(1) default '0',
+  `Active` tinyint(1) default '0',
+  PRIMARY KEY  (`MagID`)
+) ENGINE=MyISAM
+
+CREATE TABLE `tblMagPosts` (
+  `ID` int(11) NOT NULL auto_increment,
+  `PostNumber` int(11) NOT NULL,
+  `MagID` int(11) NOT NULL,
+  `PlayerID` varchar(18) NOT NULL,
+  `PlayerName` varchar(100) default NULL,
+  `InProgress` int(11) default '0',
+  `PostDate` int(11) default NULL,
+  `Subject` text,
+  `Body` text,
+  PRIMARY KEY  (`ID`),
+  KEY `MagID` (`MagID`),
+  FULLTEXT KEY `PlayerName` (`PlayerName`,`Subject`,`Body`)
+) ENGINE=MyISAM
+
+CREATE TABLE `tblMagRead` (
+  `ID` int(11) NOT NULL auto_increment,
+  `SubID` int(11) default NULL,
+  `PostID` int(11) NOT NULL,
+  `Time` int(11) default NULL,
+  PRIMARY KEY  (`ID`),
+  KEY `PostID` (`PostID`),
+  KEY `SubID` (`SubID`),
+  KEY `SubID_2` (`SubID`,`PostID`)
+) ENGINE=MyISAM
+
+CREATE TABLE `tblMagLocks` (
+  `ID` int(11) NOT NULL auto_increment,
+  `magid` int(11) NOT NULL,
+  `orgid` int(11) NOT NULL,
+  `locktype` varchar(5) NOT NULL,
+  PRIMARY KEY  (`ID`)
+) ENGINE=MyISAM
+
+CREATE TABLE `tblMagSubscriptions` (
+  `ID` int(11) NOT NULL auto_increment,
+  `PlayerID` varchar(18) NOT NULL,
+  `MagID` int(11) NOT NULL,
+  `SubDate` timestamp NOT NULL default CURRENT_TIMESTAMP on update CURRENT_TIMESTAMP,
+  PRIMARY KEY  (`ID`),
+  KEY `MagID` (`MagID`)
+) ENGINE=MyISAM
+
+@sql CREATE TABLE tblMagSubscriptions ( ID INT NOT NULL AUTO_INCREMENT, PlayerID VARCHAR(18) NOT NULL, MagID INT NOT NULL, SubDate TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP, PRIMARY KEY ( ID ), KEY idxMag (MagID), KEY idxSubscription (MagID, PlayerID))
+@sql CREATE TABLE tblMagLocks ( ID INT NOT NULL AUTO_INCREMENT, MagID INT NOT NULL, OrgID INT NOT NULL, LockType VARCHAR(5) NOT NULL, PRIMARY KEY (ID))
+@sql CREATE TABLE tblMagRead ( ID INT NOT NULL AUTO_INCREMENT, SubID INT DEFAULT NULL, PostID INT NOT NULL, Time INT DEFAULT NULL, PRIMARY KEY  (ID), KEY PostID ( PostID ), KEY SubID (SubID), KEY SubID_2 (PostID, SubID))
+@sql CREATE TABLE tblMagPosts ( ID int(11) NOT NULL auto_increment, PostNumber  int(11) NOT NULL, MagID int(11) NOT NULL, PlayerID varchar(18) NOT NULL, PlayerName varchar(100) default NULL, InProgress int(11) default '0', PostDate int(11) default NULL, Subject text, Body text, PRIMARY KEY  (ID), KEY MagID (MagID), FULLTEXT KEY PlayerName (PlayerName,Subject,Body))
+@sql CREATE TABLE tblMagMagazines ( MagID int(11) NOT NULL auto_increment, Alias varchar(5) NOT NULL, Name varchar(50) NOT NULL, Description text, IC tinyint(1) default '0', Private tinyint(1) default '0', Active tinyint(1) default '0', PRIMARY KEY  (MagID))
+
+@create $--:Theme Resource: MagSystem
+@set $--:Theme Resource = VISUAL
+@set $--:Theme Resource = NO_COMMAND
+
+
+@create $--:SQL Script: MagSystem
+@set $--:SQL Script: MagSystem = VISUAL
+@set $--:SQL Script: MagSystem = NO_COMMAND
+@power $--:SQL Script: MagSystem = SQL_OK
+&SQL $--:SQL Script: MagSystem=
+&SQL_SELECT $--:SQL Script: MagSystem=
+&SQL`INSERT $--:SQL Script: MagSystem=
+&SQL`INSERT`NEWMAG $--:SQL Script: MagSystem=sql({INSERT INTO %vm (Alias,Name) VALUES ('[sqlescape(%0)]','[sqlescape(%1)]')})
+&SQL`INSERT`NEWPOST $--:SQL Script: MagSystem=sql({INSERT INTO %vp (PostNumber,MagID,PlayerID,PlayerName,PostDate,Subject,Body) VALUES (%0,'%1','%2','[sqlescape(%3)]','[secs()]','[sqlescape(%4)]','[sqlescape(%5)]')})
+&SQL`INSERT`READPOST $--:SQL Script: MagSystem=sql({INSERT INTO %vr (SubID,PostID) VALUES ('[sqlescape(%0)]','[sqlescape(%1)]')})
+&SQL`SELECT $--:SQL Script: MagSystem=
+&SQL`SELECT`ALLACTIVE $--:SQL Script: MagSystem=sql({SELECT MagID, Alias, Name, IC FROM %vm WHERE Active=1 ORDER BY Alias},~,|)
+&SQL`SELECT`GETLASTPOST $--:SQL Script: MagSystem=sql({SELECT MAX(PostNumber)+1 FROM %vp mp INNER JOIN %vm mm ON mp.MagID = mm.MagID WHERE mm.Alias='[sqlescape(%0)]'})
+&SQL`SELECT`GETLASTREAD $--:SQL Script: MagSystem=sql({SELECT mp.ID, mp.PostNumber, mp.MagID, mp.PlayerName, mp.PostDate, mp.Subject, mp.Body FROM %vp mp INNER JOIN %vr mr ON mp.ID=mr.PostID AND mr.SubID=(SELECT ms.ID FROM %vs ms WHERE ms.PlayerID='[sqlescape(%0)]' AND ms.MagID=(SELECT mm.MagID FROM %vm mm WHERE mm.Alias='[sqlescape(%1)]')) ORDER BY mp.ID DESC LIMIT 1 OFFSET 0},~,|)
+&SQL`SELECT`GETMAG $--:SQL Script: MagSystem=sql({SELECT MagID, Alias, Name, IC, Private, Active, Description FROM %vm WHERE Alias='[sqlescape(%0)]'},,|)
+&SQL`SELECT`GETMAGBYID $--:SQL Script: MagSystem=sql({SELECT MagID, Alias, Name, IC FROM %vm WHERE MagID='[sqlescape(%0)]'},,|)
+&SQL`SELECT`GETMAGLOCK $--:SQL Script: MagSystem=sql({SELECT orgid FROM %vl ml INNER JOIN %vm mm ON ml.MagID = mm.MagID WHERE mm.Alias='[sqlescape(%0)]' AND ml.locktype='[sqlescape(%1)]'},|)
+&SQL`SELECT`GETMAGPAGES $--:SQL Script: MagSystem=sql({SELECT mp.ID, mp.PostNumber, mp.PlayerName, mp.PostDate, mp.Subject FROM %vp mp INNER JOIN %vm mm ON mp.MagID=mm.MagID WHERE mm.Alias='[sqlescape(%0)]' ORDER BY mp.PostNumber LIMIT [v(V_TOTALPERPAGE)] OFFSET [mul(sub(%1,1),[v(V_TOTALPERPAGE)])]},~,|)
+&SQL`SELECT`GETNEXTUNREAD $--:SQL Script: MagSystem=sql({SELECT mp.ID, mp.PostNumber, mp.MagID, mp.PlayerName, mp.PostDate, mp.Subject, mp.Body FROM %vp mp LEFT JOIN %vr mr ON (mp.ID = mr.PostID AND mr.SubID = '[sqlescape(%1)]') WHERE mr.SubID IS NULL AND mp.MagID=[sqlescape(%0)] ORDER BY mp.PostNumber ASC LIMIT 1 OFFSET 0},~,|)
+&SQL`SELECT`GETNEXTUNREAD2 $--:SQL Script: MagSystem=sql({SELECT mp.ID, mp.PostNumber, mp.MagID, mp.PlayerName, mp.PostDate, mp.Subject, mp.Body FROM %vp mp INNER JOIN %vs ms  ON ms.MagID = mp.magID LEFT JOIN  %vr mr ON (mp.ID = mr.PostID and mr.SubID = ms.ID) WHERE ms.PlayerID='[sqlescape(%0)]' AND mr.SubID IS NULL ORDER BY mp.MagID, mp.PostNumber ASC LIMIT 1 OFFSET 0},~,|)
+&SQL`SELECT`GETPOSTBYID $--:SQL Script: MagSystem=sql({SELECT mp.ID, mp.PostDate FROM %vp mp INNER JOIN %vm mm ON mp.MagID=mm.MagID WHERE mp.PostNumber='[sqlescape(%0)]' AND mp.PlayerName='[sqlescape(%2)]' AND mm.Alias='[sqlescape(%1)]'},~,|)
+&SQL`SELECT`GETPOSTSTOSKIP $--:SQL Script: MagSystem=sql({SELECT mp.ID FROM %vp mp LEFT JOIN %vr mr ON (mp.ID = mr.PostID AND mr.SubID = (SELECT ms.ID FROM %vs ms WHERE ms.MagID=(SELECT mm.MagID FROM %vm mm WHERE mm.Alias='[sqlescape(%0)]') AND PlayerID='[sqlescape(%1)]')) WHERE mr.SubID IS NULL AND mp.MagID=(SELECT mm.MagID FROM %vm mm WHERE mm.Alias='[sqlescape(%0)]') ORDER BY mp.PostNumber})
+&SQL`SELECT`ISSUBSCRIBED $--:SQL Script: MagSystem=sql({SELECT ID FROM %vs ms INNER JOIN %vm mm ON ms.MagID = mm.MagID WHERE mm.Alias='[sqlescape(%0)]' AND ms.PlayerID='[sqlescape(%1)]'})
+&SQL`SELECT`ISVALIDPOST $--:SQL Script: MagSystem=sql({SELECT mp.ID, mp.PostNumber, mp.MagID, mp.PlayerName, mp.PostDate, mp.Subject, mp.Body FROM %vp mp INNER JOIN %vm mm ON mp.MagID=mm.MagID WHERE mm.Alias='[sqlescape(%0)]' AND mp.PostNumber='[sqlescape(%1)]'},~,|)
+&SQL`SELECT`PLAYERNOTSUBBED $--:SQL Script: MagSystem=sql({SELECT mm.MagID, mm.Alias, mm.Name, mm.IC FROM %vm mm LEFT JOIN %vs ms ON (mm.MagID = ms.MagID AND ms.PlayerID = '[sqlescape(%0)]') WHERE ms.PlayerID IS NULL ORDER BY mm.Alias ASC},~,|)
+&SQL`SELECT`PLAYERSUBSCRIPTION $--:SQL Script: MagSystem=sql({SELECT mm.MagID, mm.Alias, mm.Name, mm.IC FROM %vs ms INNER JOIN %vm mm ON ms.MagID=mm.MagID WHERE ms.PlayerID='[sqlescape(%0)]' AND mm.Active=1 ORDER BY Alias},~,|)
+&SQL`SELECT`READLOCK $--:SQL Script: MagSystem=sql({SELECT ReadLock FROM %vl ml INNER JOIN %vm mm ON ml.MagID = mm.MagID WHERE mm.Alias='[sqlescape(%0)]'},~,|)
+&SQL`SELECT`SEARCHMAG $--:SQL Script: MagSystem=sql({SELECT mp.ID, mp.PostNumber, mp.PlayerName, mp.PostDate, mp.Subject, MATCH(PlayerName,Subject,Body) AGAINST ("[sqlescape(%1)]") AS score FROM %vp mp WHERE mp.MagID='[sqlescape(%0)]' AND MATCH (PlayerName,Subject,Body) AGAINST ("[sqlescape(%1)]" IN BOOLEAN MODE) ORDER BY score DESC LIMIT [v(V_TOTALPERPAGE)] OFFSET [mul(sub(%2,1),[v(V_TOTALPERPAGE)])]},~,|)
+&SQL`SELECT`SEARCHPAGES $--:SQL Script: MagSystem=sql({SELECT COUNT(*) FROM %vp mp INNER JOIN %vm mm ON mp.MagID=mm.MagID WHERE mm.Alias='[sqlescape(%0)]' AND MATCH (PlayerName,Subject,Body) AGAINST ("[sqlescape(%1)]" IN BOOLEAN MODE) ORDER BY mp.PostNumber},~,|)
+&SQL`SELECT`SUBSCRIBED $--:SQL Script: MagSystem=sql({SELECT ms.ID, PlayerID, MagID, SubDate FROM %vs ms WHERE PlayerID='[sqlescape(%0)]'},~,|)
+&SQL`SELECT`TOTALUNREAD $--:SQL Script: MagSystem=sql({SELECT COUNT(*) FROM %vp mp LEFT JOIN %vr mr ON (mp.ID = mr.PostID AND mr.SubID = (SELECT ms.ID FROM %vs ms INNER JOIN %vm mm ON ms.MagID = mm.MagID WHERE mm.MagID='[sqlescape(%0)]' AND ms.PlayerID='[sqlescape(%1)]')) WHERE mr.SubID IS NULL AND mp.MagID='[sqlescape(%0)]'},~,|)
+&SQL`SELECT`WRITELOCK $--:SQL Script: MagSystem=sql({SELECT WriteLock FROM %vl ml INNER JOIN %vm mm ON ml.MagID = mm.MagID WHERE mm.Alias='[sqlescape(%0)]'},~,|)
+@VL $--:SQL Script: MagSystem=tblMagLocks
+@VM $--:SQL Script: MagSystem=tblMagMagazines
+@VP $--:SQL Script: MagSystem=tblMagPosts
+@VR $--:SQL Script: MagSystem=tblMagRead
+@VS $--:SQL Script: MagSystem=tblMagSubscriptions
+
+
+@create $--:Resource Object: MagSystem
+@parent $--:Resource Object: MagSystem=$--:SQL Script: MagSystem
+@set $--:Resource Object: MagSystem = WIZARD
+@set $--:Resource Object: MagSystem = NO_COMMAND
+&FUN_BROWSEMAG $--:Resource Object: MagSystem=[setq(A,u(SQL`SELECT`GETMAGPAGES,extract(%0,2,1,|),%1))][setq(C,trunc(add(div(%q2,[v(v_totalperpage)]),1)))]%r[u(mag_header,Page %1 of %qC,[extract(%0,3,1,|)] \([extract(%0,2,1,|)]\))][ansi(hg,[align(4 35 20 12,ID,Subject,Posted By,Date)])]%r[ansi(g,[align(4 35 20 12,-,-,-,-,-)])]%r[iter(%qA,step(FUN_BROWSEMAG`TABLE,itext(0),5,|),~,%r)]%r[ansi(g,[align(4 35 20 12,-,-,-,-,-)])]%r[u(mag_footer,@browse...)]
+&FUN_BROWSEMAG`TABLE $--:Resource Object: MagSystem=[align(4 35 20 12,%1,mid(%4,0,35),%2,timefmt($Y-$m-$d,extract(%3,1,1)))]
+&FUN_MAGINFO $--:Resource Object: MagSystem=%r%r[u(mag_header,,@mag info)][setq(2,u(SQL`SELECT`GETLASTPOST,extract(%1,2,1,|)))][align(>18 1 50,ansi(hy,Name),ansi(hx,:),[extract(%1,3,1,|)] \([extract(%1,2,1,|)]\))]%r[align(>18 1 20 >14 1 4,ansi(hy,IC?),ansi(hx,:),if(extract(%1,4,1,|),Yes,No),ansi(hy,Private?),ansi(hx,:),if(extract(%1,5,1,|),Yes,No))]%r[align(>18 1 20 >14 1 4,ansi(hy,Total Posts),ansi(hx,:),if(%q2,%q2,0),ansi(hy,Unread Posts),ansi(hx,:),u(FUN_UNREAD,extract(%1,1,1,|),objid(%0)))]%r[align(>18 1 20 >14 1 4,ansi(hy,Read Access),ansi(hx,:),if(mag(passeslock,extract(%1,2,1,|),read,%n),Yes,No),ansi(hy,Write Access),ansi(hx,:),if(mag(passeslock,extract(%1,2,1,|),write,%n),Yes,No))]%r%r[if(or(isstaff(%#),mag(passeslock,extract(%1,2,1,|),read,%n)),[u(mag_header,Mag Locks,)][if(mag(haslock,extract(%1,2,1,|),read),%r[ansi(hy,Read Lock)][ansi(hx,:)] %r[map(#lambda/align(10 50,repeat(-,9)>,org(orgname,\%0)),mag(getlock,extract(%1,2,1,|),read),~,%r)])][if(mag(haslock,extract(%1,2,1,|),write),%r%r[ansi(hy,Write Lock)][ansi(hx,:)] %r[map(#lambda/align(10 50,repeat(-,9)>,org(orgname,\%0)),mag(getlock,extract(%1,2,1,|),write),~,%r)])]%r)]%r[u(mag_header,Description,)][if(extract(%1,7,1,|),%r[extract(%1,7,1,|)])][u(mag_footer)]
+&FUN_NEWPOSTS $--:Resource Object: MagSystem=[setq(M,squish(iter(u(SQL`SELECT`PLAYERSUBSCRIPTION,%:),if(gt(u(FUN_UNREAD,extract(##,1,1,|),%:),0),##),~,~),~))][if(cor(%qM,extract(mail(%#),2,1)),%r[u(mag_header,,@mag new)][u(FUN_SHOWALLMAGS`HEADER)][u(FUN_SHOWALLMAGS`FOOTER)][iter(%qM,step(FUN_SHOWALLMAGS`TABLE,##,4,|),~,%r)]%r[u(FUN_PLAYERMAIL,%#)]%r[u(FUN_SHOWALLMAGS`FOOTER)]%rColour Meanings: [ansi(hw,SUBSCRIBED)]%b%b[ansi(hx,NOT SUBSCRIBED)]%b%b[ansi(c,WRITE ONLY)]%r[u(mag_footer)],ansi(r,No Unread @MagPosts or @Mail))]
+&FUN_NEW_BROWSEMAG $--:Resource Object: MagSystem=
+&FUN_NEW_BROWSEMAG`TABLE $--:Resource Object: MagSystem=[align(4 35 20 12 7,%1,mid(%4,0,35),%2,timefmt($Y-$m-$d,extract(%3,1,1)),mid(%5,0,7))]
+&FUN_NEXT $--:Resource Object: MagSystem=[u(mag_header,,[extract(%2,3,1,|)] \([extract(%2,2,1,|)]\))][u(fun_viewpost,%0,%1,%2)][u(mag_footer,@next...)]
+&FUN_PLAYERCLEANUP $--:Resource Object: MagSystem=[iter(u(SQL`SELECT`SUBSCRIBED,objid(%0)),sql(DELETE FROM %vr WHERE SubID='[extract(itext(0),1,1,|)]'),~)][sql({DELETE FROM %vs WHERE PlayerID='[objid(%0)]'})][nspemit(%#,ansi(c,Magazine subscriptions for [ansi(hy,name(%0))] removed.))]
+&FUN_PLAYERMAIL $--:Resource Object: MagSystem=align(>5 47 1 1 1 2 >5 >5,[ansi(xh,@)]mail,[ansi(hy,Personal)] [ansi(hy,Messages)],Y,Y,Y,ansi(g,O),last(mailstats(%0)),extract(mail(%0),2,1))
+&FUN_POSTLIST $--:Resource Object: MagSystem=squish(iter(lwho(),if(u(SQL`SELECT`ISSUBSCRIBED,%0,objid(##)),##)))
+&FUN_READLOCK $--:Resource Object: MagSystem=mag(passeslock,mag(magnum,%0),read,objid(%1))
+&FUN_SEARCH $--:Resource Object: MagSystem=[u(mag_header,Page %3 of %2,extract(%0,3,1,|))][align(4 35 20 12 7,ansi(hg,ID)%r[ansi(g,----)],ansi(hg,Subject)%r[ansi(g,repeat(-,35))],ansi(hg,Posted By)%r[ansi(g,repeat(-,20))],ansi(hg,Date)%r[ansi(g,repeat(-,12))],ansi(hg,Weight)%r[ansi(g,repeat(-,7))])]%r[iter(%1,step(FUN_NEW_BROWSEMAG`TABLE,itext(0),6,|),~,%r)]%r[align(4 35 20 12 7,ansi(g,----),ansi(g,repeat(-,35)),ansi(g,repeat(-,20)),ansi(g,repeat(-,12)),ansi(g,repeat(-,7)))]%r[u(mag_footer,@mag/search...)]
+&FUN_SHOWALLMAGS $--:Resource Object: MagSystem=%r[u(mag_header,,@mag list)][u(FUN_SHOWALLMAGS`HEADER)][u(FUN_SHOWALLMAGS`FOOTER)][setq(M,filter(#lambda/cor(mag(readlock,extract(\%0,2,1,|),%:),mag(writelock,extract(\%0,2,1,|),%:)),mag(getallmags),~))][if(%qM,[map(FUN_SHOWALLMAGS`TABLE,%qM,~,%r)]%r)][u(FUN_PLAYERMAIL,%#)]%r[u(FUN_SHOWALLMAGS`FOOTER)]%?
+&FUN_SHOWALLMAGS`FOOTER $--:Resource Object: MagSystem=[ansi(g,align(5 47 1 1 1 2 -5 -5,-,-,-,-,-,-,-,-,-))]%r
+&FUN_SHOWALLMAGS`HEADER $--:Resource Object: MagSystem=[ansi(hg,align(5 47 1 1 1 2 -5 -5,Alias,Name,S,R,W,IC,T,U))]%r
+&FUN_SHOWALLMAGS`TABLE $--:Resource Object: MagSystem=align(>5 47 1 1 1 2 >5 >5,ansi(xh,extract(%0,2,1,|)),extract(%0,3,1,|),if(mag(subscribed,extract(%0,2,1,|),%:),Y,N),if(mag(readlock,extract(%0,2,1,|),%:),Y,N),if(mag(writelock,extract(%0,2,1,|),%:),Y,N),if(extract(%0,4,1,|),ansi(hg,Y),ansi(g,N)),if(setr(A,mag(totalposts,extract(%0,2,1,|))),%qA,0),mag(magunread,extract(%0,1,1,|),%:))
+&FUN_SHOWSUBBEDMAGS $--:Resource Object: MagSystem=%r[u(mag_header,,@mag subs)][u(FUN_SHOWALLMAGS`HEADER)][u(FUN_SHOWALLMAGS`FOOTER)][map(FUN_SHOWALLMAGS`TABLE,mag(playersubs,%:),~,%r)]%r[u(FUN_PLAYERMAIL,%#)]%r[u(FUN_SHOWALLMAGS`FOOTER)]%?
+&FUN_TOTALMSGS $--:Resource Object: MagSystem=sub(u(SQL`SELECT`GETLASTPOST,%0),1)
+&FUN_UNREAD $--:Resource Object: MagSystem=localize([setq(A,u(SQL`SELECT`TOTALUNREAD,%0,%1))][if(%qA,%qA,0)])
+&FUN_VIEWPOST $--:Resource Object: MagSystem=[align(>8 1 26 >8 1 26,ansi(g,From),ansi(hx,:),extract(%1,4,1,|),ansi(g,Magazine),ansi(hx,:),[extract(%2,3,1,|)] [ansi(hx,\()][extract(%2,2,1,|)][ansi(hx,\))])]%r[align(>8 1 26 >8 1 12,ansi(g,Time),ansi(hx,:),[convsecs(extract(%1,5,1,|))],ansi(g,Post),ansi(hx,:),[extract(%1,2,1,|)] [ansi(hx,of)] [u(FUN_TOTALMSGS,extract(%2,2,1,|))])]%r[align(>8 -1 67,ansi(g,Subject),ansi(hx,:),extract(%1,6,1,|))]%r%r[extract(%1,7,1,|)]
+&FUN_WRITELOCK $--:Resource Object: MagSystem=mag(passeslock,mag(magnum,%0),write,objid(%1))
+&MAG_BROWSEMAG $--:Resource Object: MagSystem=
+&MAG_BROWSEMAG`TABLE $--:Resource Object: MagSystem=[align(4 35 20 12,%1,extract(%0,2,1,|),if(name(extract(%0,3,1,|)),name(extract(%0,3,1,|)),Unknown),extract(%0,4,1,|))]
+&MAG_FOOTER $--:Resource Object: MagSystem=%r[header(%?,%0,ansi(hw,time()),width(%#,125),Gx)]
+&MAG_HEADER $--:Resource Object: MagSystem=[header(ansi(hw,Magazine System),%0,%1,width(%#,125),Gx)]%r
+&MSG $--:Resource Object: MagSystem=Messages for the magsystem.
+&MSG`FINISHPOST $--:Resource Object: MagSystem=
+&MSG`FINISHPOST`SELF $--:Resource Object: MagSystem=[@@(0 - Subject, 1 - PostID, 2 - Alias, 3 - MagName)][ansi(c,You have posted a new message "[ansi(w,%0)] [ansi(hx,\()][ansi(hy,%1)][ansi(hx,\))]" to [ansi(hy,%3)] [ansi(hx,\()][ansi(hw,%2)][ansi(hx,\))].)]
+&MSG`FINISHPOST`SUBSCRIBERS $--:Resource Object: MagSystem=[@@(0 - Alias, 1 - MagName, 2 - PostID, 3 - Poster, 4)][ansi(c,New post on [ansi(hy,%1)] [ansi(xh,\()][ansi(hw,%0)][ansi(hx,\))] by [ansi(hw,%3)]: "[ansi(w,%4)] [ansi(hx,\()][ansi(hy,%2)][ansi(hx,\))]".)]
+&MSG`INVALIDMAG $--:Resource Object: MagSystem=#-1 INVALID MAGAZINE \([ucstr(%0)]\)
+&MSG`NOTSUBSCRIBED $--:Resource Object: MagSystem=[@@(0 - MagName, 1 - MagAlias)][ansi(r,You are not subscribed to [ansi(y,%0)] [ansi(hx,\()][ansi(y,ucstr(%1))][ansi(hx,\))].)]
+&MSG`NOUNREAD $--:Resource Object: MagSystem=ansi(r,No unread messages in any magazine.)
+&MSG`PERMISSIONDENIED $--:Resource Object: MagSystem=#-1 PERMISSION DENIED
+&MSG`POST $--:Resource Object: MagSystem=[@@(0 - MagName)][u(mag_msg,You start writing a post to magazine [ansi(hy,%0)])]
+&MSG`READLOCK $--:Resource Object: MagSystem=[ansi(r,You do not have permission to READ this [ansi(xh,@)]Magazine.)]
+&MSG`UNDO $--:Resource Object: MagSystem=u(mag_msg,Undo was successful)
+&MSG`WRITELOCK $--:Resource Object: MagSystem=[ansi(r,You do not have permission to WRITE to this [ansi(xh,@)]Magazine.)]
+&V_TOTALPERPAGE $--:Resource Object: MagSystem=20
+&V_UNDOTIMEOUT $--:Resource Object: MagSystem=600
+
+
+
+@create $--: Magazine Commands
+@parent $--: Magazine Commands=$--:Resource Object: MagSystem
+@set $--: Magazine Commands = WIZARD
+@set $--: Magazine Commands = SAFE
+@set $--: Magazine Commands = !NO_COMMAND
+@power $--: Magazine Commands = No_Pay
+&CMD $--: Magazine Commands=
+&CMD_@MAG $--: Magazine Commands=$@mag/create *=*:@assert mag(stafflock,%#)={@nspemit %#=v(MSG`PERMISSIONDENIED)};@break u(SQL`SELECT`GETMAG,%0)={@nspemit %#=[ansi(r,A Magazine with that Alias already exists.)]};th u(SQL`INSERT`NEWMAG,%0,%1);@nspemit %#=[ansi(c,Magazine [ansi(hy,%1)] created successfully.)]
+&CMD_@MAG`ACTIVATE $--: Magazine Commands=$^@mag/(activate|deactivate) (\w+)$:@assert mag(stafflock,%#)={@nspemit %#=v(MSG`PERMISSIONDENIED)};@assert mag(getmag,%2)={@nspemit %#=u(MSG`INVALIDMAG,%2)};@sql UPDATE %vm SET Active=[switch(%1,activate,1,deactivate,0)] WHERE Alias='[sqlescape(%2)]';@nspemit %#=[ansi(hy,extract(%q1,3,1,|))]%b[ansi(c,[capstr(%1)]d.)]
+&CMD_@MAG`DESCRIPTION $--: Magazine Commands=$@mag/desc *=*:@assert mag(stafflock,%#)={@nspemit %#=v(MSG`PERMISSIONDENIED)};@assert mag(getmag,%0)={@nspemit %#=u(MSG`INVALIDMAG,%0)};@sql UPDATE %vm SET Description='[sqlescape(%1)]' WHERE Alias='[sqlescape(%0)]';@nspemit %#=[ansi(c,Description for [ansi(hy,extract(%q1,3,1,|))] set.)]
+&CMD_@MAG`IC $--: Magazine Commands=$@mag/ic *=*:@assert mag(stafflock,%#)={@nspemit %#=v(MSG`PERMISSIONDENIED)};@assert mag(getmag,%0)={@nspemit %#=u(MSG`INVALIDMAG,%0)};@sql UPDATE %vm SET IC=[if(%1,1,0)] WHERE Alias='[sqlescape(%0)]';@nspemit %#=[ansi(c,IC Status updated for)]%b[ansi(hy,extract(%q1,3,1,|))]
+&CMD_@MAG`PRIVATE $--: Magazine Commands=$@mag/private *=*:@assert mag(stafflock,%#)={@nspemit %#=v(MSG`PERMISSIONDENIED)};@assert mag(getmag,%0)={@nspemit %#=u(MSG`INVALIDMAG,%0)};@sql UPDATE %vm SET Private=[if(%1,1,0)] WHERE Alias='[sqlescape(%0)]';@nspemit %#=[ansi(c,Private Status updated for)]%b[ansi(hy,extract(%q1,3,1,|))]
+&CMD_BROWSE_MAG $--: Magazine Commands=$^(@browse|@mag browse|@mag/browse) (\w+)(?\:=(\d+))?$:@assert mag(getmag,%2)={@nspemit %#=u(MSG`INVALIDMAG,%2)};@assert mag(subscribedadmin,%2,%:)={@nspemit %#=v(MSG`PERMISSIONDENIED)};th [setq(2,dec(u(SQL`SELECT`GETLASTPOST,%2)))][setq(3,trunc(add(div(%q2,v(V_TOTALPERPAGE)),1)))];@switch lte(setr(4,if(%3,%3,%q3)),%q3)=1,{@nspemit %#=u(FUN_BROWSEMAG,%q1,%q4)},{@nspemit %#=[ansi(r,Invalid page number)]}
+&CMD_BROWSE_POST $--: Magazine Commands=$^(@browse|@mag browse|@mag/browse) (\w+)/(\d+)$:@assert mag(getmag,%2)={@nspemit %#=u(MSG`INVALIDMAG,%2)};@assert mag(readlock,%2,%:)={@nspemit %#=v(MSG`PERMISSIONDENIED)};@assert mag(subscribedadmin,%2,%:)={@nspemit %#=v(MSG`PERMISSIONDENIED)};@assert mag(validpost,%2,%3)={@nspemit %#=#-1 INVALID MAGAZINE POST};@nspemit %#=u(FUN_NEXT,%q2,%q3,%q1)
+&CMD_DELETE $--: Magazine Commands=$^(@mag delete|@mag/delete) (\w+)=(\d+)$:@assert mag(stafflock,%#)={@nspemit %#=v(MSG`PERMISSIONDENIED)};@assert mag(getmag,%2)={@nspemit %#=u(MSG`INVALIDMAG,%2)};@assert mag(validpost,%2,%3)={@nspemit %#=#-1 INVALID MAGAZINE POST};@sql DELETE FROM %vr WHERE PostID='[extract(%q2,1,1,|)]';@sql DELETE FROM %vp WHERE ID='[extract(%q3,1,1,|)]';@nspemit %#=ansi(c,Message has been deleted from [ansi(hy,extract(%q1,3,1,|))] [ansi(hx,\()][ansi(hy,extract(%q1,2,1,|))][ansi(hx,\))])
+&CMD_MAGINFO $--: Magazine Commands=$^@mag(.?)info (\w+)$:@assert mag(getmag,%2)={@nspemit %#=u(MSG`INVALIDMAG,%2)};@nspemit %#=u(FUN_MAGINFO,%#,%q1)
+&CMD_MAGLIST $--: Magazine Commands=$^@mag([s+]|.?list)$:@nspemit %#=u(fun_showallmags,%#)
+&CMD_MAGNEW $--: Magazine Commands=$^(@mag/new|@magnew|@mag new)$:@nspemit %#=u(fun_newposts,%#)
+&CMD_MAGSKIP $--: Magazine Commands=$^@mag(.?)skip (\w+)$:@assert mag(getmag,%2)={@nspemit %#=u(MSG`INVALIDMAG,%2)};@assert mag(subscribed,%2,%:)={@nspemit %#=v(MSG`PERMISSIONDENIED)};th [iter(u(SQL`SELECT`GETPOSTSTOSKIP,%2,%:),sql({INSERT INTO %vr (SubID,PostID,Time) VALUES (%q3,[itext(0)],[secs()])}))];@nspemit %#=[ansi(c,All Messages for [ansi(hy,extract(%q1,3,1,|))] [ansi(hx,\()][ansi(hy,ucstr(extract(%q1,2,1,|)))][ansi(hx,\))] skipped.)]
+&CMD_MAGSUBS $--: Magazine Commands=$^@mag/subs(?\: (.+))?$:@assert mag(stafflock,%#)={@nspemit %#=u(FUN_SHOWSUBBEDMAGS,%:)};@nspemit %#=u(FUN_SHOWSUBBEDMAGS,objid(pmatch(%1)))
+&CMD_NEXT $--: Magazine Commands=$^(@mag next|@next|@mag/next) (.+)$:@assert mag(getmag,%2)={@nspemit %#=u(MSG`INVALIDMAG,%2)};@assert mag(readlock,%2,%:)={@nspemit %#=v(MSG`PERMISSIONDENIED)};@assert mag(subscribed,%2,%:)={@nspemit %#=v(MSG`PERMISSIONDENIED)};@switch t(setr(4,u(SQL`SELECT`GETNEXTUNREAD,extract(%q1,1,1,|),%q3)))=1,{th [u(SQL`INSERT`READPOST,%q3,extract(%q4,1,1,|))];@nspemit %#=u(fun_next,%q3,%q4,%q1)},0,{@nspemit %#=[ansi(c,No unread messages for [ansi(hy,extract(%q1,3,1,|))] [ansi(hx,\()][ansi(hy,ucstr(extract(%q1,2,1,|)))][ansi(hx,\))].)]}
+&CMD_NEXT_ALL $--: Magazine Commands=$^(@mag next|@next|@mag/next)$:@switch t(setr(1,u(SQL`SELECT`GETNEXTUNREAD2,%:)))=1,{th [setq(2,u(SQL`SELECT`GETMAGBYID,extract(%q1,3,1,|)))][mag(subscribed,extract(%q2,2,1,|),%:)][u(SQL`INSERT`READPOST,%q3,extract(%q1,1,1,|))];@nspemit %#=u(FUN_NEXT,%n,%q1,%q2)},{@nspemit %#=u(msg`nounread)}
+&CMD_POST $--: Magazine Commands=$@post *=*/*:@assert mag(getmag,%0)={@nspemit %#=u(MSG`INVALIDMAG,%2)};@break and(hasflag(%#,NO_OOC),eq(extract(%q1,4,1,|),0))={@nspemit %#=You cannot post to an OOC Mag};@assert mag(writelock,%0,%:)={@nspemit %#=v(MSG`PERMISSIONDENIED)};th mag(postmsg,%0,%:,%n,%1,%2);@nspemit %#=[u(MSG`FINISHPOST`SELF,%1,%q2,extract(%q1,2,1,|),extract(%q1,3,1,|))];@nspemit/list [remove(u(FUN_POSTLIST,%0),%#)]=[u(MSG`FINISHPOST`SUBSCRIBERS,extract(%q1,2,1,|),extract(%q1,3,1,|),%q2,%n,%1)]
+&CMD_REPEAT $--: Magazine Commands=$^(@mag repeat|@repeat|@mag/repeat) (.+)$:@assert mag(getmag,%2)={@nspemit %#=u(MSG`INVALIDMAG,%2)};@assert mag(readlock,%2,%:)={@nspemit %#=v(MSG`PERMISSIONDENIED)};@assert mag(subscribed,%2,%:)={@nspemit %#=v(MSG`PERMISSIONDENIED)};@switch t(setr(4,u(SQL`SELECT`GETLASTREAD,%:,%2)))=1,{@nspemit %#=u(FUN_NEXT,%q2,%q4,%q1)},{@nspemit %#=[ansi(c,There are no messages to view for)]%b[ansi(hy,extract(%q1,3,1,|))] [ansi(hx,\()][ansi(hy,ucstr(extract(%q1,1,1,|)))][ansi(hx,\))].
+&CMD_SEARCH $--: Magazine Commands=$^(@mag/search) (\w+)(?\:/(\d+))?=(.+?)$:@assert mag(getmag,%2)={@nspemit %#=u(MSG`INVALIDMAG,%2)};@assert mag(readlock,%2,%:)={@nspemit %#=v(MSG`PERMISSIONDENIED)};@assert mag(subscribed,%2,%:)={@nspemit %#=v(MSG`PERMISSIONDENIED)};th [setq(3,dec(u(SQL`SELECT`GETLASTPOST,%2)))];@assert t(setr(4,u(SQL`SELECT`SEARCHPAGES,%2,%4)))={@nspemit %#=ansi(r,No posts found matching search criteria.)};th [setq(4,inc(trunc(div(%q4,v(V_TOTALPERPAGE)))))][setq(6,u(SQL`SELECT`SEARCHMAG,extract(%q1,1,1,|),%4,setr(5,if(%3,%3,%q4))))];@nspemit %#=u(FUN_SEARCH,%q1,%q6,%q4,%q5)
+&CMD_SUB $--: Magazine Commands=$^(@sub|@subscribe|@mag/sub|@mag sub|@mag/subscribe|@mag subscribe) (.*)$:@assert mag(getmag,%2)={@nspemit %#=u(MSG`INVALIDMAG,%2)};@assert mag(readlock,%2,%:)={@nspemit %#=v(MSG`PERMISSIONDENIED)};@break mag(subscribed,%2,%:)={@nspemit %#=#-1 ALREADY SUBSCRIBED};@sql INSERT INTO %vs (PlayerID,MagID) VALUES ('%:','[extract(%q1,1,1,|)]');@nspemit %#=[ansi(c,Your subscription has been approved for [ansi(hy,extract(%q1,3,1,|))] [ansi(hx,\()][ansi(hy,ucstr(extract(%q1,2,1,|)))][ansi(hx,\))].)]
+&CMD_UNDO $--: Magazine Commands=$@mag/undo *=*:@assert mag(getmag,%0)={@nspemit %#=u(MSG`INVALIDMAG,%0)};@assert mag(getpostbyid,%0,%1)={@nspemit %#=#-1 INVALID MAGAZINE POST};@switch t(lt(sub(secs(),extract(%q2,5,1,|)),v(V_UNDOTIMEOUT)))=1,{@sql DELETE FROM %vr WHERE PostID='[extract(%q2,1,1,|)]';@sql DELETE FROM %vp WHERE ID='[extract(%q2,1,1,|)]';@nspemit %#=ansi(c,Message has been deleted from [ansi(hy,extract(%q1,3,1,|))] [ansi(hx,\()][ansi(hy,extract(%q1,2,1,|))][ansi(hx,\))])},{@nspemit %#=ansi(r,Lockout time has exceeded [etimefmt($2xH $2xM $2xS,v(V_UNDOTIMEOUT))])}
+&CMD_UNSUB $--: Magazine Commands=$^(@unsub|@unsubscribe|@mag/unsub|@mag unsub|@mag/unsubscribe|@mag unsubscribe) (.*)$:@assert mag(getmag,%2)={@nspemit %#=u(MSG`INVALIDMAG,%2)};@assert mag(subscribed,%2,%:)={@nspemit %#=u(MSG`NOTSUBSCRIBED,extract(%q1,3,1,|),extract(%q1,2,1,|))};@sql DELETE FROM %vr WHERE SubID='%q2';@sql DELETE FROM %vs WHERE PlayerID='[objid(%#)]' AND MagID=(SELECT mm.MagID FROM %vm mm WHERE mm.Alias='[sqlescape(%2)]');@nspemit %#=[ansi(c,You have unsubscribed from the [ansi(hy,extract(%q1,3,1,|))] [ansi(hx,\()][ansi(hy,ucstr(extract(%q1,2,1,|)))][ansi(hx,\))].)]
+
+@set $--: Magazine Commands/CMD_@MAG`ACTIVATE=regexp
+@set $--: Magazine Commands/CMD_@MAG`LOCK_CREATE=regexp
+@set $--: Magazine Commands/CMD_@MAG`LOCK_DELETE=regexp
+@set $--: Magazine Commands/CMD_BROWSE_MAG=regexp
+@set $--: Magazine Commands/CMD_BROWSE_POST=regexp
+@set $--: Magazine Commands/CMD_DELETE=regexp
+@set $--: Magazine Commands/CMD_MAGINFO=regexp
+@set $--: Magazine Commands/CMD_MAGLIST=regexp
+@set $--: Magazine Commands/CMD_MAGNEW=regexp
+@set $--: Magazine Commands/CMD_MAGSKIP=regexp
+@set $--: Magazine Commands/CMD_MAGSUBS=regexp
+@set $--: Magazine Commands/CMD_NEXT=regexp
+@set $--: Magazine Commands/CMD_NEXT_ALL=regexp
+@set $--: Magazine Commands/CMD_REPEAT=regexp
+@set $--: Magazine Commands/CMD_SEARCH=regexp
+@set $--: Magazine Commands/CMD_SUB=regexp
+@set $--: Magazine Commands/CMD_UNSUB=regexp
+
+&CMD_@MAG`RENAME $--: Magazine Commands=$@mag/rename * to *:@break isstaff(%#)={@switch t()=1,{@nspemit %#=Magazine Renamed to '%1'},{@nspemit %#=Invalid Magazine.}};@nspemit %#=ansi(r,Permission Denied)
+&CMD_@MAG`LOCK_CREATE $--: Magazine Commands=$^@mag/lock/(read|write) (\w+)=(\w.+)$:@break isstaff(%#)={@break t(setr(M,mag(magnum,%2)))={@break t(setr(O,org(orgnum,%3)))={@assert t(member(mag(getlock,%2,%1),%qO,~))={@sql INSERT INTO tblMagLocks (magid,orgid,locktype) VALUES ('%qM','%qO','%1');@nspemit %#=ansi(c,You have added [ansi(hy,org(orgname,%qO))] to the [ansi(hy,mag(magname,%qM))]%b[ansi(hr,%1)] lock)};@nspemit %#=ansi(r,org(orgname,%qO)] is already on the [mag(magname,%qM)] %1 lock)};@nspemit %#=ansi(r,Invalid Organisation)};@nspemit %#=ansi(r,Invalid Magazine)};@nspemit %#=ansi(r,Permission Denied)
+&CMD_@MAG`LOCK_DELETE $--: Magazine Commands=$^@mag/lock/delete/(read|write) (\w+)(?\:=(\w.+))?$:@break isstaff(%#)={@break t(setr(M,mag(magnum,%2)))={@break t(%3)={@break t(setr(O,org(orgnum,%3)))={@break t(member(mag(getlock,%2,%1),%qO,~))={@sql DELETE FROM tblMagLocks WHERE magid='[sqlescape(%qM)]' AND orgid='[sqlescape(%qO)]' AND locktype='[sqlescape(%1)]';@nspemit %#=ansi(c,[ansi(hy,org(orgname,%qO))] removed from [ansi(hy,mag(magname,%qM))]%b[ansi(hr,%1)] lock)};@nspemit %#=ansi(r,[org(orgname,%qO)] is not on the [mag(magname,%qM)] %1 lock)};@nspemit %#=ansi(r,Invalid Organisation)};@break t(mag(haslock,%2,%1))={@sql DELETE FROM tblMagLocks WHERE magid='[sqlescape(%qM)]' AND locktype='[sqlescape(%1)]';@nspemit %#=ansi(c,[ansi(hr,%1)] lock removed for [ansi(hy,mag(magname,%qM))])};@nspemit %#=ansi(r,[mag(magname,%qM)] does not have a %1 lock.)};@nspemit %#=ansi(r,Invalid Magazine)};@nspemit %#=ansi(r,Permission Denied)
+&CMD_@MAG`DESTROY $--: Magazine Commands=$@mag/destroy *:@break isstaff(%#)={@switch t()=1,{@nspemit %#=Magazine Nuked.},{@nspemit %#=Invalid Magazine.}};@nspemit %#=ansi(r,Permission Denied)
+
+
+@create $--: Toolkit: Magazine
+@set $--: Toolkit: Magazine = OPAQUE
+@set $--: Toolkit: Magazine = WIZARD
+@set $--: Toolkit: Magazine = SAFE
+@set $--: Toolkit: Magazine = NO_COMMAND
+@parent $--: Toolkit: Magazine = $--:Resource Object: MagSystem
+&FUN $--: Toolkit: Magazine=
+&FUN`MAG $--: Toolkit: Magazine=if(hasattr(me, tk.%0),u(tk.%0,%1,%2,%3,%4,%5,%6,%7,%8,%9),#-1 NO SUCH MAG FUNCTION \([ucstr(%0)]\))
+@STARTUP $--: Toolkit: Magazine=@function mag=me, fun`mag
+&TK.GETLASTPOST $--: Toolkit: Magazine=setr(2,if(setr(A,u(SQL`SELECT`GETLASTPOST,%0)),%qA,1))
+&TK.GETLOCK $--: Toolkit: Magazine=sql({SELECT orgid FROM %vl ml INNER JOIN %vm mm ON ml.MagID = mm.MagID WHERE mm.Alias='[sqlescape(%0)]' AND ml.locktype='[sqlescape(%1)]'},~,|)
+&TK.GETLOCKNODELIM $--: Toolkit: Magazine=sql({SELECT orgid FROM %vl ml INNER JOIN %vm mm ON ml.MagID = mm.MagID WHERE mm.Alias='[sqlescape(%0)]' AND ml.locktype='[sqlescape(%1)]'})
+&TK.GETMAG $--: Toolkit: Magazine=if(setr(1,u(SQL`SELECT`GETMAG,%0)),%q1,0)
+&TK.GETALLMAGS $--: Toolkit: Magazine=u(SQL`SELECT`ALLACTIVE)
+&TK.GETPOSTBYID $--: Toolkit: Magazine=if(setr(2,u(SQL`SELECT`ISVALIDPOST,%0,%1)),%q2,0)
+&TK.HASLOCK $--: Toolkit: Magazine=t(sql({select COUNT(ID) FROM %vl ml INNER JOIN %vm mm ON ml.MagID = mm.MagID WHERE mm.Alias='[sqlescape(%0)]' AND ml.locktype='[sqlescape(%1)]'}))
+&TK.MAGALIAS $--: Toolkit: Magazine=sql({SELECT alias FROM %vm WHERE MagID=%0})
+&TK.MAGNAME $--: Toolkit: Magazine=sql({SELECT name FROM %vm WHERE MagID='[sqlescape(%0)]'})
+&TK.MAGNUM $--: Toolkit: Magazine=sql({SELECT magid FROM %vm WHERE Alias='[sqlescape(%0)]'})
+&TK.MAGUNREAD $--: Toolkit: Magazine=u(FUN_UNREAD,%0,%1)
+&TK.PASSESLOCK $--: Toolkit: Magazine=if(mag(haslock,mag(magalias,%0),%1),setq(o,org(orgplayer,objid(*%2)))[setq(m,sql({SELECT orgid FROM tblMagLocks WHERE magid=%0 AND locktype='%1'}))][if(gt(words(setinter(%qm,%qo)),0),1,0)],1)
+&TK.PLAYERSUBS $--: Toolkit: Magazine=u(SQL`SELECT`PLAYERSUBSCRIPTION,%0)
+&TK.POSTMSG $--: Toolkit: Magazine=u(SQL`INSERT`NEWPOST,mag(getlastpost,%0),mag(magnum,%0),%1,%2,%3,%4)
+&TK.READLOCK $--: Toolkit: Magazine=if(cor(u(FUN_READLOCK,%0,%1),isadmin(num(%1))),1,0)
+&TK.STAFFLOCK $--: Toolkit: Magazine=if(orlflags(%0, WIZARD ROYALTY),1,0)
+&TK.SUBSCRIBED $--: Toolkit: Magazine=if(setr(3,u(SQL`SELECT`ISSUBSCRIBED,%0,%1)),1,0)
+&TK.SUBSCRIBEDADMIN $--: Toolkit: Magazine=if(cor(t(setr(3,u(SQL`SELECT`ISSUBSCRIBED,%0,%1))),u(tk.stafflock,%1)),1,0)
+&TK.TOTALPOSTS $--: Toolkit: Magazine=u(FUN_TOTALMSGS,%0)
+&TK.VALIDPOST $--: Toolkit: Magazine=if(setr(3,u(SQL`SELECT`ISVALIDPOST,%0,%1)),1,0)
+&TK.WRITELOCK $--: Toolkit: Magazine=if(cor(u(FUN_WRITELOCK,%0,%1),isadmin(num(%1))),1,0)

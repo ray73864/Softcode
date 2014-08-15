@@ -1,0 +1,175 @@
+CREATE TABLE tblTodoReport (
+	id int(11) NOT NULL auto_increment, 
+	assigned_to VARCHAR(20) NOT NULL, 
+	complete_by INT NOT NULL
+	resolved int(11) default '0',
+	resolved_by varchar(20) default NULL,
+	resolved_date INT default NULL,
+	reported_by varchar(20) NOT NULL,
+	details text NOT NULL,
+	PRIMARY KEY  (id),
+	FULLTEXT KEY category_2 (category)
+) ENGINE=MyISAM;
+
+CREATE TABLE tblTodoComment (
+	comment_id int(11) NOT NULL auto_increment,
+	parent_id int(11) NOT NULL,
+	comment_by varchar(20) NOT NULL,
+	comment_date INT NOT NULL,
+	comment text NOT NULL,
+	PRIMARY KEY  (comment_id), 
+	KEY parent_id (id)
+) ENGINE=MyISAM;
+
+CREATE TABLE tblTotoProgress (
+	progress_id INT NOT NULL AUTO_INCREMENT,
+	parent_id INT NOT NULL,
+	progress_date INT NOT NULL,
+	progress_by VARCHAR(20) NOT NULL,
+	progress_text TEXT NOT NULL,
+	PRIMARY KEY (progress_id),
+	KEY parent_id (id)
+) ENGINE=MyISAM;
+	
+
+@create $--:SQL Script: Todo System
+@power $--:SQL Script: Todo System = SQL_OK
+&SQL $--:SQL Script: Todo System
+&SQL`SELECT`GET_ALL_TODOS $--:SQL Script: Todo System = 
+&SQL`SELECT`GET_THIS_TODO $--:SQL Script: Todo System = 
+&SQL`SELECT`GET_TODO_COMMENTS $--:SQL Script: Todo System = 
+&SQL`SELECT`GET_TODO_PROGRESS $--:SQL Script: Todo System = 
+&SQL`INSERT`NEW_TODO $--:SQL Script: Todo System = 
+&SQL`INSERT`TODO_COMMENT $--:SQL Script: Todo System = 
+&SQL`INSERT`TODO_PROGRESS $--:SQL Script: Todo System = 
+@VC $--:SQL Script: Todo System = xM
+@VN $--:SQL Script: Todo System = Todo System
+@VV $--:SQL Script: Todo System = v1.0
+@VP $--:SQL Script: Todo System = 20
+@VR $--:SQL Script: Todo System = tblTodoReport
+@VS $--:SQL Script: Todo System = tblTodoComment
+@VT $--:SQL Script: Todo System = tblTotoProgress
+
+@create $--:Command Object: Todo System
+@parent $--:Command Object: Todo System = $--:SQL Script: Todo System
+@set $--:Command Object: Todo System = WIZARD
+@set $--:Command Object: Todo System = NO_COMMAND
+&CMD`TODO $--:Command Object: Todo System = $@todo:
+&CMD`VIEW_TODO $--:Command Object: Todo System = $@todo *:
+&CMD`NEW_UNASSIGNED_TODO $--:Command Object: Todo System = $@todo/create/unas* *=*/*:
+&CMD`NEW_ASSIGNED_TODO $--:Command Object: Todo System = $@todo/create *=*/*/*:
+&CMD`COMMENT_TODO $--:Command Object: Todo System = @todo/comment *=*:
+&CMD`PROGRESS_TODO $--:Command Object: Todo System = @todo/progress *=*:
+&FUN`TODO_LIST $--:Command Object: Todo System = 
+&FUN`TODO_VIEW $--:Command Object: Todo System = 
+&FUN`NEW_TODO $--:Command Object: Todo System = 
+&FUN`COMMENT_TODO $--:Command Object: Todo System = 
+&FUN`PROGRESS_TODO $--:Command Object: Todo System = 
+
+
+
+
+&FUN`SUGGEST Master Function Object=if(hasattr(#4217, fun_%0),u(##4217/fun_%0,%1,%2,%3,%4,%5,%6,%7,%8,%9),prefix([ansi(r,No such suggest function.)],setr(C,get(#4217/VC)),setr(N,get(#4217/VN)))%r[prefix(ansi(c,Available functions)[ansi(hx,:)]%b[itemize(edit(lattr(#4217/fun_*),FUN_,))],%qC,%qN)])
+
+@create $--:Sql Object: Suggestions
+@link $--:Sql Object: Suggestions = #0
+@set $--:Sql Object: Suggestions = NO_COMMAND
+@power $--:Sql Object: Suggestions = SQL_OK
+&SQL $--:Sql Object: Suggestions=
+&SQL`COUNT $--:Sql Object: Suggestions=
+&SQL`COUNTALL $--:Sql Object: Suggestions=sql(SELECT COUNT(*) FROM %vr)
+&SQL`COUNTCURRENT $--:Sql Object: Suggestions=sql(SELECT COUNT(*) FROM %vr WHERE resolved=0)
+&SQL`COUNTRESOLVED $--:Sql Object: Suggestions=sql(SELECT COUNT(*) FROM %vr WHERE resolved=1)
+&SQL`DELETE $--:Sql Object: Suggestions=
+&SQL`DELETE`COMMENT $--:Sql Object: Suggestions=sql({DELETE FROM %vx WHERE parent_id = %0})
+&SQL`DELETE`SUGGEST $--:Sql Object: Suggestions=sql({DELETE FROM %vr WHERE id = %0})
+&SQL`INSERT $--:Sql Object: Suggestions=
+&SQL`INSERT`COMMENT $--:Sql Object: Suggestions=sql(INSERT INTO %vx (parent_id, comment_by, comment_date, comment) VALUES (%0, "%1", "%2", "[sqlescape(%3)]")
+&SQL`INSERT`SUGGEST $--:Sql Object: Suggestions=sql(INSERT INTO %vr (reported_by,location,zone,report_start,details) VALUES ("%0","%1","%2","%3","[sqlescape(%4)]")
+&SQL`SELECT $--:Sql Object: Suggestions=
+&SQL`SELECT`COUNT_COMMENTS $--:Sql Object: Suggestions=sql(SELECT Count(*) FROM %vx WHERE parent_id=%0)
+&SQL`SELECT`EXISTS $--:Sql Object: Suggestions=sql(SELECT Count(*) FROM %vr WHERE id=%0)
+&SQL`SELECT`GET $--:Sql Object: Suggestions=
+&SQL`SELECT`GET`ALL $--:Sql Object: Suggestions=sql({SELECT id, resolved, reported_by, location FROM %vr ORDER BY id ASC},~,|)
+&SQL`SELECT`GET`ALL_LIMITED $--:Sql Object: Suggestions=sql({SELECT id, resolved, reported_by, location FROM %vr ORDER BY id ASC LIMIT %0,%1},~,|)
+&SQL`SELECT`GET`COMMENTS $--:Sql Object: Suggestions=SELECT comment_id, comment_by, comment_date, comment FROM %vx WHERE parent_id=%0
+&SQL`SELECT`GET`CURRENT $--:Sql Object: Suggestions=SELECT r.id, r.reported_by, r.location, r.details, COUNT(c.parent_id) FROM tblSuggestReport r LEFT JOIN tblSuggestComment c ON c.parent_id = r.id WHERE r.resolved = 0 GROUP BY r.id ORDER BY r.id
+&SQL`SELECT`GET`CURRENTWITHCAT $--:Sql Object: Suggestions=sql({SELECT id, reported_by, location FROM %vr WHERE resolved=0 AND category='%0'},~,|)
+&SQL`SELECT`GET`LASTPOST $--:Sql Object: Suggestions=sql(SELECT id FROM %vr ORDER BY id DESC LIMIT 1)
+&SQL`SELECT`GET`RESOLVED $--:Sql Object: Suggestions=sql({SELECT id, reported_by, location, details FROM %vr WHERE resolved=1},~,|)
+&SQL`SELECT`GET`THIS $--:Sql Object: Suggestions=sql({SELECT id, resolved, resolved_by, resolved_date, reported_by, location, zone, report_start FROM %vr WHERE id=%0},~,|)
+&SQL`SELECT`GET`THISDETAILS $--:Sql Object: Suggestions=sql({SELECT details FROM %vr WHERE id=%0})
+&SQL`SELECT`GET`THIS_FULL $--:Sql Object: Suggestions=sql({SELECT id, resolved, resolved_by, resolved_date, reported_by, location, zone, report_start, details FROM %vr WHERE id=%0},,|)
+&SQL`UPDATE $--:Sql Object: Suggestions=
+&SQL`UPDATE`RESOLVE $--:Sql Object: Suggestions=sql({UPDATE %vr SET resolved=1, resolved_by='%1', resolved_date='%2' WHERE id='%0'})
+@VC $--:Sql Object: Suggestions=xR
+@VN $--:Sql Object: Suggestions=Suggestion System 1.0
+@VP $--:Sql Object: Suggestions=25
+@VR $--:Sql Object: Suggestions=tblSuggestReport
+@VX $--:Sql Object: Suggestions=tblSuggestComment
+
+
+@create $--: Function Object: Suggestions
+@link $--: Function Object: Suggestions = #0
+@parent $--: Function Object: Suggestions=#4221
+@set $--: Function Object: Suggestions = WIZARD
+@set $--: Function Object: Suggestions = NO_COMMAND
+@DEBUGFORWARDLIST $--: Function Object: Suggestions=#6
+@set $--: Function Object: Suggestions/DEBUGFORWARDLIST=no_command no_inherit prefixmatch
+&FMT_COMMENT $--: Function Object: Suggestions=nspemit(%#,prefix({USAGE: suggest\(comment,<parent_id>,<comment_by_objid>,<comment_date_secs>,<comment>\)},%vc,%vn))
+&FMT_CREATE $--: Function Object: Suggestions=nspemit(%#,prefix({USAGE: suggest(create,<report_by_objid>,<location_objid>,<zone_objid>,<report_start_secs>,<details>)},%vc,%vn))
+&FMT_DELETE $--: Function Object: Suggestions=nspemit(%#,prefix({USAGE: suggest(delete,<suggest_id>)},%vc,%vn))
+&FMT_GET $--: Function Object: Suggestions=nspemit(%#,prefix({USAGE: suggest\(get,<parent_id>\)},%vc,%vn))
+&FMT_RESOLVE $--: Function Object: Suggestions=nspemit(%#,prefix({USAGE: suggest\(resolve,<parent_id>,<resolved_by>,<resolve_date_secs>,<resolve message>\)},%vc,%vn))
+&FUN_COMMENT $--: Function Object: Suggestions=[if(u(VAL_COMMENT,%0,%1,%2,%3),[if(u(VAL_VALID,%0),[u(SQL`INSERT`COMMENT,%0,%1,%2,%3)][nspemit(%#,prefix(Comment added to suggestion #%0.,%vc,%vn))][cemit(Admin,[ansi(hy,%n)] [ansi(c,has added a comment to suggestion)] [ansi(hx,#)][ansi(hy,%0)][ansi(hx,.)],noisy)])])]
+&FUN_COUNT $--: Function Object: Suggestions=u(SQL`COUNTCURRENT)
+&FUN_CREATE $--: Function Object: Suggestions=[if(u(VAL_CREATE,%0,%1,%2,%3,%4),u(SQL`INSERT`SUGGEST,%0,%1,%2,%3,{%4})[nspemit(%#,prefix(Suggestion submitted.,%vc,%vn))][cemit(admin,%n has filed a new suggestion. #[setr(A,u(SQL`SELECT`GET`LASTPOST))],noisy)])][cemit(public,%n has filed a new suggestion. #%qA,noisy)]
+&FUN_DELETE $--: Function Object: Suggestions=[if(u(VAL_DELETE,%0),if(u(VAL_VALID,%0),[u(SQL`DELETE`COMMENT,%0)][u(SQL`DELETE`SUGGEST,%0)][nscemit(Admin,[ansi(c,Suggestion)] [ansi(hx,#)][ansi(hy,%0)] [ansi(c,and all related comments purged from the database by )] [ansi(hy,name(%#))][ansi(c,.)],noisy)]))]
+&FUN_GET $--: Function Object: Suggestions=[if(u(VAL_GET,%0),[if(u(VAL_VALID,%0),u(SQL`SELECT`GET`THIS_FULL,%0))])]
+&FUN_RESOLVE $--: Function Object: Suggestions=[if(u(VAL_RESOLVE,%0,%1,%2,%3),[if(u(VAL_VALID,%0),[u(SQL`UPDATE`RESOLVE,%0,%1,%2)][mailsend(extract(u(SQL`SELECT`GET`THIS,%0),5,1,|),Suggestion #%0/Your suggestion has been resolved by %n.%r%rOriginal Suggestion:%r%r%t{[u(SQL`SELECT`GET`THISDETAILS,%0)]}%r%rThe resolution to this suggestion was: %r%r%t{%3})][cemit(admin,[ansi(hy,%n)]%b[ansi(c,has marked suggestion)]%b[ansi(hx,#)][ansi(hy,%0)]%b[ansi(c,as resolved.)],noisy)][nspemit(%#,prefix(Suggestion #%0 marked as resolved.,%vc,%vn))])])]
+&MSG_INVALID $--: Function Object: Suggestions=nspemit(%#,prefix(That is not a valid suggestion number.,%vc,%vn))
+&VAL_COMMENT $--: Function Object: Suggestions=[if(and(isint(%0),isobjid(%1),isint(%2),t(%3)),1,u(FMT_COMMENT))]
+&VAL_CREATE $--: Function Object: Suggestions=[if(and(isobjid(%0),isobjid(%1),isobjid(%2),isint(%3),t(%4)),1,u(FMT_CREATE))]
+&VAL_DELETE $--: Function Object: Suggestions=[if(isint(%0),1,u(FMT_DELETE))]
+&VAL_GET $--: Function Object: Suggestions=[if(isint(%0),1,u(FMT_GET))]
+&VAL_RESOLVE $--: Function Object: Suggestions=[if(and(isint(%0),isobjid(%1),isint(%2),t(%3)),1,u(FMT_RESOLVE))]
+&VAL_VALID $--: Function Object: Suggestions=[if(u(SQL`SELECT`EXISTS,%0),1,u(MSG_INVALID))]
+
+@create $--:MR: Suggestions (Admin)
+@link $--:MR: Suggestions (Admin) = #0
+@parent $--:MR: Suggestions (Admin)=#4221
+@lock/user:Use $--:MR: Suggestions (Admin)=FLAG^ROYALTY|FLAG^WIZARD
+@set $--:MR: Suggestions (Admin) = WIZARD
+@set $--:MR: Suggestions (Admin) = NO_LOG
+@set $--:MR: Suggestions (Admin) = SYSTEM
+&CMD_DELETE $--:MR: Suggestions (Admin)=$@suggest/delete *:th [suggest(delete,%0)]
+&CMD_RESOLVE $--:MR: Suggestions (Admin)=$@suggest/resolve *=*:@assert t(setr(A,u(SQL`SELECT`GET`THIS,%0)))={@nspemit %#=prefix(v(MSG_INVALID),%vc,%vn)};th [suggest(resolve,%0,%:,secs(),{%1})][suggest(comment,%0,%:,secs(),{%1})]
+&MSG_INVALID $--:MR: Suggestions (Admin)=That is not a valid suggestion number.
+
+
+/* Needs rewriting */
+
+&CMD_LIMIT $--:MR: Suggestions (Admin) = $^@suggest([s]?)/all(\s*)(\d*)$:th [setq(B,words(setr(A,u(SQLSelectGetAllBugs_Limited, [if(%3,dec(sub(mul(%3,%vp),dec(%vp))),0)], %vp)),^))][setq(C,ceil(fdiv(u(SQLCountAll),%vp)))][setq(D,if(%3,%3,1))];@nspemit %#=%r[header(ansi(wh,%vn),,[ansi(xh,\(+bug\/all %qD\))]%b%bComplete Bug List,width(%#),%vc)]%r%r[if(cand(%qB,lte(%qD,%qC)),[iter(%qA,[align(>5 1 <20 <[sub(width(%#),43)] >11,[ansi(hx,#)][ansi(if(extract(##,2,1,|),r,rh),extract(##,1,1,|))],ansi(hx,:),ansi(c,name(before(extract(##,3,1,|),:))),[mid(u(SQLSELECTGETTHISBUG_DESCRIPTION,extract(##,1,1,|)),0,[sub(width(%#),43)])],[ansi(c,[u(SQLSELECTCOMMENTSBYBUG,extract(##,1,1,|))] comments)])],^,%r)],%r[ansi(hx,<no bugs reported or no bugs on this page>)])]%r%r[header(%?,Total Bugs: [u(SQLCountAll)],Page [ansi(if(gt(%qD,%qC),rh,c),%qD)] of [ansi(c,%qC)],width(%#),%vc)]%r
+@set $--:MR: Suggestions (Admin)/CMD_LIMIT=regexp
+&CMD_RESOLVE $--:MR: Suggestions (Admin) = $@suggest/resolved:th [setq(A,u(SQLSELECTGETRESOLVEDBUGS))];@nspemit %#=[if(%qA,%r[header(ansi(wh,%vn),,Resolved Bugs List,width(%#),%vc)]%r[iter(%qA,%r[align(>5 1 <20 <20 >6 >11,[ansi(hx,#)][ansi(hr,extract(##,1,1,|))],ansi(hx,:),ansi(c,name(extract(##,2,1,|))),name(extract(##,3,1,|)),extract(##,3,1,|),[ansi(c,[u(SQLSELECTCOMMENTSBYBUG,extract(##,1,1,|))] comments)])]%r%t[extract(##,4,1,|)],~,%r)]%r%r[header(%?,Resolved Bugs: [if(%qA,words(%qA,~),0)],ztime(%#),width(%#),%vc)]%r,%r[ansi(hx,<no bugs resolved>)])]
+&CMD_SHOWBYCAT $--:MR: Suggestions (Admin) = $^@suggest (\w+)$:th [setq(A,u(SQLSELECTGETCURRENTBUGSWITHCAT,%1))][nspemit(%#,[header(ansi(wh,%vn),,Condensed Bug List,width(%#),%vc)]%r)][if(%qA,[iter(%qA,[nspemit(%#,[align(>5 1 <20 <[sub(width(%#),43)] >11,[ansi(hx,#)][ansi(hr,extract(%i0,1,1,|))],ansi(hx,:),ansi(c,name(extract(%i0,2,1,|))),[mid(u(SQLSELECTGETTHISBUG_DESCRIPTION,extract(%i0,1,1,|)),0,[sub(width(%#),43)])],[ansi(c,[u(SQLSELECTCOMMENTSBYBUG,extract(%i0,1,1,|))] comments)])])],^,%r)],[nspemit(%#,[ansi(hx,<no bugs reported>)])])][nspemit(%#,%r[header(%?,Unresolved Bugs: [if(%qA,words(%qA,^),0)],ztime(%#),width(%#),%vc)])]
+@set $--:MR: Suggestions (Admin)/CMD_SHOWBYCAT=regexp
+
+/* End */
+
+
+@create $--:MR: Suggestions (Player)
+@link $--:MR: Suggestions (Player) = #0
+@parent $--:MR: Suggestions (Player)=#4221
+@lock/BASIC $--:MR: Suggestions (Player)=#FALSE
+@lset $--:MR: Suggestions (Player)/BASIC=no_inherit
+@set $--:MR: Suggestions (Player) = WIZARD
+@set $--:MR: Suggestions (Player) = NO_LOG
+@set $--:MR: Suggestions (Player) = SYSTEM
+&CMD_BUG $--:MR: Suggestions (Player)=$@suggest/submit *:@assert gte(words(%0),5)={@nspemit %#=prefix(Please write a more detailed description of the suggestion.,%vc,%vn)};th suggest(create,%:,%L,%Z#,secs(),{%0})
+&CMD_COMMENT $--:MR: Suggestions (Player)=$@suggest/comment *=*:th [suggest(comment,%0,%:,secs(),{%1})]
+&CMD_DETAILED $--:MR: Suggestions (Player)=$^(@suggest) (?\:(#))?(\d+)$:@assert t(setr(A,u(SQL`SELECT`GET`THIS,%3)))={@nspemit %#=prefix(That is not a valid suggestion number.,%vc,%vn)};@nspemit %#=[header(ansi(wh,%vn),[ansi(c,Suggestion #[extract(%qA,1,1,|)])],Detailed Suggestion Report,width(%#),%vc)]%r%r[align(>15 1 <20,ansi(r,Submitted By),ansi(hx,:),[name(extract(%qA,5,1,|))] \([before(extract(%qA,5,1,|),:)]\))]%r[align(>15 1 <40,ansi(r,Location),ansi(hx,:),[name(extract(%qA,6,1,|))] \([extract(%qA,6,1,|)]\))]%r[align(>15 1 <30,ansi(r,Zone),ansi(hx,:),[name(extract(%qA,7,1,|))] \([extract(%qA,7,1,|)]\))]%r[align(>15 1 <50,ansi(r,Report Filed),ansi(hx,:),[convsecs(extract(%qA,8,1,|))] \([timestring(sub(secs(),extract(%qA,8,1,|)))] ago\))]%r[align(>15 1 <60,ansi(r,Resolved),ansi(hx,:),if(extract(%qA,2,1,|),[convsecs(extract(%qA,4,1,|))] \([timestring(sub(secs(),extract(%qA,4,1,|)))] ago\) by [name(extract(%qA,3,1,|))] \([before(extract(%qA,3,1,|),:)]\),ansi(hx,<not yet resolved>)))]%r%r[header(,Description,,width(%#),%vc)]%r%r%t[u(SQL`SELECT`GET`THISDETAILS,%3)]%r%r[header(,Comments,,width(%#),%vc)]%r%r[if(u(SQL`SELECT`COUNT_COMMENTS,%3),%t[mapsql(FUN_DISPLAYCOMMENT,u(SQL`SELECT`GET`COMMENTS,%3),%r%r%t)],%t[ansi(hx,<no comments>)])]%r%r[header(%?,ansi(c,u(SQL`SELECT`COMMENTS,%3) Comments),ztime(%#),width(%#),%vc)]%r
+@set $--:MR: Suggestions (Player)/CMD_DETAILED=regexp
+&CMD_LIST $--:MR: Suggestions (Player)=$@suggest:@nspemit %#=[header(ansi(wh,%vn),,Condensed Suggestion List,width(%#),%vc)]%r%r[if(u(SQL`COUNTCURRENT),mapsql(FUN_LIST,u(SQL`SELECT`GET`CURRENT),%r),ansi(r,No Unresolved suggestions found.))]%r%r[header(%?,Unresolved Suggestions: [u(SQL`COUNTCURRENT)],time(),width(%#),%vc)]
+&FUN_DISPLAYCOMMENT $--:MR: Suggestions (Player)=align(4 1 60, [ansi(hx,#)][ansi(hr,%0)],ansi(hx,:),by [ansi(c,name(%2))] on [ansi(hw,convsecs(%3))] \([timestring(sub(secs(),%3))] ago\))%r%t%t%4
+&FUN_LIST $--:MR: Suggestions (Player)=[align(>5 1 <20 <[sub(width(%#),43)] >11,[ansi(hx,#)][ansi(hr,%1)],[ansi(hx,:)],[ansi(c,name(%2))],[mid(%4,0,sub(width(%#),43))],[ansi(c,%5 comments)])]

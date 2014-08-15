@@ -1,0 +1,42 @@
+CREATE TABLE `AssistQueue` (
+  `Id` int(11) NOT NULL auto_increment,
+  `SubmitDate` bigint(1) default NULL,
+  `Location` varchar(20) default NULL,
+  `PlayerName` varchar(32) default NULL,
+  `PlayerObjID` varchar(20) default NULL,
+  `Description` text,
+  `Resolved` bit(1) default '\0',
+  `Resolution` text,
+  `ResolvedDate` bigint(1) default NULL,
+  `ResolvedByName` varchar(32) default NULL,
+  `ResolvedByID` varchar(20) default NULL,
+  PRIMARY KEY  (`Id`)
+) ENGINE=MyISAM
+
+@create $--:Assist and Bug Resource
+@link $--:Assist and Bug Resource = #0
+@set $--:Assist and Bug Resource = QUIET
+@set $--:Assist and Bug Resource = NO_COMMAND
+@power $--:Assist and Bug Resource = Pemit_All
+@power $--:Assist and Bug Resource = Can_nspemit
+@power $--:Assist and Bug Resource = SQL_OK
+&BAK_ASSIST_#8304 $--:Assist and Bug Resource=The Hov SuD waw''s bot isn't saying anything to confirm requests made of it. As for the planet, tlhoQeygh, it's not on the hubbeq clearance lists, and the bot isn't functioning properly; it responds to requests made for 'alpha control', but if requested to repair, it... doesn't. This is an issue because I have a destroyed weapon on my ship I wish to repair.
+@DEBUGFORWARDLIST $--:Assist and Bug Resource=#6
+@set $--:Assist and Bug Resource/DEBUGFORWARDLIST=no_command no_inherit prefixmatch
+&F_ADMINLIST $--:Assist and Bug Resource=[setq(c,>5 16 8 35 >10)[nspemit(%#,[ansi(Bhw,lfield(Admin @Problem Listing,78))]%r[ansi(hyu,align(%qc,ID,Name,Loc,Problem,Age))])][iter(u(#386/sql`adminlist),nspemit(%#,align(%qc,elements(##,1,|),elements(##,4,|),elements(##,3,|),elements(##,6,|),timestring(sub(secs(),elements(##,2,|))) )),~,)]
+&F_PLAYERLIST $--:Assist and Bug Resource=[setq(c,>5 16 20 20 >10)[nspemit(%#,[ansi(Bhw,lfield(@Problem Listing,78))]%r[ansi(hyu,align(%qc,ID,Name,Problem,Resolution,Age))])][iter(u(#386/sql`Playerlist),nspemit(%#,align(%qc,elements(##,1,|),elements(##,4,|),elements(##,6,|),elements(##,8,|),timestring(sub(secs(),elements(##,2,|))) )),~,)]
+&F_RESOLVE $--:Assist and Bug Resource=[nspemit(%#,resolve %0=%1)]
+&F_SUBMIT $--:Assist and Bug Resource=[u(#386/sql`submit,%0)][nspemit(%#,ansi(nc,Your issue has been submitted.))]
+&SQL $--:Assist and Bug Resource=
+&SQL`ADMINLIST $--:Assist and Bug Resource=sql({SELECT Id, FROM_UNIXTIME(SubmitDate,'%%Y-%%m-%%d'), Location, PlayerName, PlayerObjID FROM AssistQueue WHERE Resolved<>1 GROUP BY SubmitDate ORDER BY SubmitDate ASC},~,|)
+&SQL`ADMINLIST.DESC $--:Assist and Bug Resource=sql({SELECT Description FROM AssistQueue WHERE Id=[sqlescape(%0)]})
+&SQL`COUNTASSISTS $--:Assist and Bug Resource=sql({SELECT COUNT(*) FROM AssistQueue WHERE RESOLVED=0})
+&SQL`HASASSISTS $--:Assist and Bug Resource=sql({SELECT COUNT(*) FROM AssistQueue WHERE Resolved=0 AND PlayerObjID='%0'})
+&SQL`PLAYERLIST $--:Assist and Bug Resource=sql({SELECT Id, SubmitDate, Description FROM AssistQueue WHERE Resolved=0 AND PlayerObjID='%0' ORDER BY SubmitDate ASC},~,|)
+&SQL`REMOVE $--:Assist and Bug Resource=sql({DELETE FROM AssistQueue WHERE PlayerObjID='%0' AND Id='%1'})
+&SQL`RESOLVE $--:Assist and Bug Resource=sql({UPDATE AssistQueue SET Resolved=1,ResolvedDate=[secs()],Resolution='[sqlescape(%1)]',ResolvedByName='[sqlescape(%n)]',ResolvedByID='%:' WHERE Id='%0' AND Resolved=0})
+&SQL`SUBMIT $--:Assist and Bug Resource=sql({INSERT INTO AssistQueue(SubmitDate,Location,PlayerName,PlayerObjID,Description) VALUES('[secs()]','[sqlescape(%L)]','[sqlescape(%n)]','%:','[sqlescape(%0)]')})
+&SQL`VALIDASSIST $--:Assist and Bug Resource=sql({SELECT COUNT(*), PlayerName, PlayerObjID FROM AssistQueue WHERE Id='%0' GROUP BY PlayerObjID},~,|)
+
+&CMD`@ASSIST_A $MR: OOC Player Commands=$@assist:th [if(not(isadmin(%#)),[if(u(#386/SQL`HASASSISTS,%:),[nspemit(%#,[header(,@assist,%n)]%R%R[ansi(c,align(3 25 50,ID#,Date,Request))]%r[iter(u(#386/SQL`PLAYERLIST,%:),[step(#lambda/align(3 25 50,ansi(r,%%0),ansi(y,convsecs(%%1)),ansi(hw,%%2)),itext(0),3,|)],~,%r)]%R%R[header(,%?,[time()])][nspemit(%#,[prefix({To join the assistance queue, type [ansi(hy,@assist/submit %<issue%>)].},xC,@assist)])])],[nspemit(%#,[prefix({To join the assistance queue, type [ansi(hy,@assist/submit %<issue%>)].},xC,@assist)])])])]
+&CMD`+ASSIST_A $MR: Admin Only Commands=$@assist:@nspemit %#=[header(,@assist,%n)]%r%r[if(u(#386/SQL`COUNTASSISTS),[iter(u(#386/SQL`ADMINLIST),[align(>1 3 10  20,ansi(hx,#),ansi(r,extract(itext(0),1,1,|)),extract(itext(0),2,1,|),ansi(if(hasflag(extract(itext(0),5,1,|),connected),hy,hx),extract(itext(0),4,1,|)))][u(#386/SQL`ADMINLIST.DESC,extract(itext(0),1,1,|))],~,%r[ansi(g,align(width(%#),-,-))]%r)],[ansi(r,There are no pending assistance requests.)])]%R%R[align(<5 <[sub(width(%#),7)],[ansi(hy,Note:)],{To remove an assist from the queue, you must type [ansi(hy,@assist %<request#%>=%<resolution%>)].  This will be logged on the player's record.})]%R%R[header(,%?,time())]

@@ -1,0 +1,126 @@
+@create $T: Basebot Parent v1
+@link $T: Basebot Parent v1 = #17866
+@parent $T: Basebot Parent v1=#15017
+@set $T: Basebot Parent v1 = VISUAL
+@set $T: Basebot Parent v1 = WIZARD
+@set $T: Basebot Parent v1 = DEBUG
+@set $T: Basebot Parent v1 = NO_COMMAND
+@set $T: Basebot Parent v1 = MONITOR
+@set $T: Basebot Parent v1 = LISTEN_PARENT
+@set $T: Basebot Parent v1 = NO_LOG
+&CMD $T: Basebot Parent v1=
+&CMD_ACTIVATE $T: Basebot Parent v1=^<Subspace> *|*|*|*|* control, act* sys*|*:@assert u(%!/is_it_me_name,%4);@assert u(%!/is_it_me_freqenc,%0,%1);act sys;th u(subspace,u(msg_systems`activate))
+&CMD_AUTOFIRE $T: Basebot Parent v1=^<Subspace> *|*|*|*|* setup, set AUTO* FIRE*/*|*:@assert u(%!/is_it_me_name,%4);@assert u(%!/is_it_me_freqenc,%0,%1);th [switch(%7,1,[set(%!,autofire:1)],[set(%!,autofire:0)])][u(subspace,u(msg_autofire`reports,%7))]
+&CMD_BATTERYPOWER $T: Basebot Parent v1=^<Subspace> *|*|*|*|* control, batt* power *|*:@assert u(%!/is_it_me_name,%4);@assert u(%!/is_it_me_freqenc,%0,%1);batt %6;th u(subspace,u(msg_power,battery,reserve,%6))
+&CMD_BORDERREPORT $T: Basebot Parent v1=^<Subspace> *|*|*|*|* setup, set bor* rep*/*|*:@assert u(%!/is_it_me_name,%4);@assert u(%!/is_it_me_freqenc,%0,%1);th [switch(%7,1,[set(%!,border-report:1)],[set(%!,border-report:0)])][u(subspace,u(msg_border`reports,%7))]
+&CMD_CLAMP $T: Basebot Parent v1=^<Subspace> *|*|*|*|* control, CLAMP *|*:@assert u(%!/is_it_me_name,%4);@assert u(%!/is_it_me_freqenc,%0,%1);CLAMP %5;th u(%!/subspace,Clamping %5)
+&CMD_CLOAK $T: Basebot Parent v1=^<Subspace> *|*|*|*|* control, set cloak on|*:@assert u(%!/is_it_me_name,%4);@assert u(%!/is_it_me_freqenc,%0,%1);cloak on;th u(%!/subspace, cloak engaged)
+&CMD_DEACTIVATE $T: Basebot Parent v1=^<Subspace> *|*|*|*|* control, deact* sys|**:@assert u(%!/is_it_me_name,%4);@assert u(%!/is_it_me_freqenc,%0,%1);deact sys;th u(subspace,u(msg_systems`deactivate))
+&CMD_DECLOAK $T: Basebot Parent v1=^<Subspace> *|*|*|*|* control, set cloak off|*:@assert u(%!/is_it_me_name,%4);@assert u(%!/is_it_me_freqenc,%0,%1);cloak off;th u(%!/subspace, cloak disengaged)
+&CMD`DELETELOG $T: Basebot Parent v1=$Clear Log:th IF(orflags(%#,Wrk),[wipe(me/f`Landisplay)],[IF([GTE([First([Extract(u(%z/SECURITY`LIST),[Match(u(%z/SECURITY`LIST),*|%#)],1)],|)],4)],[wipe(me/f`Landisplay)],[pemit(%#,LOG[colon()]Permission Denied.)])])
+&CMD_DOCKINGACCESS $T: Basebot Parent v1=^<Subspace> *|*|*|*|* control, dock* acc*|*:@assert u(%!/is_it_me_name,%4);@assert u(%!/is_it_me_freqenc,%0,%1);las;th u(subspace,Shields Lowered);@wait 15={ras;th u(subspace,Shields Raised)}
+&CMD_ENCRYPTION $T: Basebot Parent v1=^<Subspace> *|*|*|*|* control, set enc* to *|*:@assert u(%!/is_it_me_name,%4);@assert u(%!/is_it_me_freqenc,%0,%1);th [u(subspace,u(msg_setting`encryption,%6))][set(%!,encryption:%6)]
+&CMD_FREQUENCY $T: Basebot Parent v1=^<Subspace> *|*|*|*|* control, set fre* to *|*:@assert u(%!/is_it_me_name,%4);@assert u(%!/is_it_me_freqenc,%0,%1);th [u(subspace,u(msg_setting`frequency,%6))][set(%!,frequency:%6)]
+&CMD_FUSIONPOWER $T: Basebot Parent v1=^<Subspace> *|*|*|*|* control, fus* power *|*:@assert u(%!/is_it_me_name,%4);@assert u(%!/is_it_me_freqenc,%0,%1);aux %6;th u(subspace,u(msg_power,fusion,power,%6))
+&CMD_HELP $T: Basebot Parent v1=^<Subspace> *|*|*|*|* control, help|*:@assert u(%!/is_it_me_name,%4);@assert u(%!/is_it_me_freqenc,%0,%1);@pemit [num(*%2)]=[textfile(help,basebot)]
+&CMD_LOADPRESET $T: Basebot Parent v1=^<Subspace> *|*|*|*|* control, preset load *|*:@assert u(%!/is_it_me_name,%4);@assert u(%!/is_it_me_freqenc,%0,%1);preset load %5;th u(subspace,Preset %5 loaded)
+&CMD`LOGWIPE $T: Basebot Parent v1=$Clear Log:th IF(orflags(%#,Wrk),[wipe(me/log`landings)][pemit(%#,LOG[colon()]Log wiped.)],[IF([GTE([First([Extract(u(%z/SECURITY`LIST),[Match(u(%z/SECURITY`LIST),*|%#)],1)],|)],3)],[wipe(me/log`landings)][pemit(%#,LOG[colon()]Log wiped.)],[pemit(%#,LOG[colon()]Permission Denied.)])])
+&CMD_MAINPOWER $T: Basebot Parent v1=^<Subspace> *|*|*|*|* control, main power *|*:@assert u(%!/is_it_me_name,%4);@assert u(%!/is_it_me_freqenc,%0,%1);main %5;th u(subspace,u(msg_power,main,power,%5))
+&CMD`MANCONSOLE $T: Basebot Parent v1=$Bot reman:@fo %!=man [u(me/BConsole)];@wait 2=mode Fighter
+&CMD_REFUEL $T: Basebot Parent v1=^<Subspace> *|*|*|*|* control, refuel *|*:@assert u(%!/is_it_me_name,%4);@assert u(%!/is_it_me_freqenc,%0,%1);@assert isdbref(setr(0,locate(zone(here),%5,Tia)))={th [u(%!/subspace,Refuel target unknown.)]};@assert sdb(get,setr(1,xget(%q0,sdb)),status,connected)={th [u(%!/subspace,No such vessel is connected.)]};th [setq(L,last(u(%q0/technology)))][setq(M,extract(u(%q0/movement),5,1))][setq(A,mul(320,%qM,%qL))][setq(D,mul(640,%qM,%qL))][sdb(do,u(zone(loc(%!))/sdb),50,secure(name(%q0)),anti,floor(fdiv(sub(mul(%qA,1000000),sdb(get,%q1,fuel,anti)),1000000)))][sdb(do,u(zone(loc(%!))/sdb),50,secure(name(%q0)),deut,floor(fdiv(sub(mul(%qD,1000000),sdb(get,%q1,fuel,deut)),1000000)))][u(%!/subspace,Refueling [name(%q0)])]
+@set $T: Basebot Parent v1/CMD_REFUEL=visual
+&CMD_RELAY $T: Basebot Parent v1=^<Subspace> *|*|*|*|* control, relay *=*|*:@break not(u(%!/is_it_me_name,%4));@assert u(%!/is_it_me_freqenc,%0,%1);s2s %5=%6;th u(%!/subspace,Relaying to %5: %6)
+&CMD_RELAY2 $T: Basebot Parent v1=^<*>--<RELAY: *>:s2s %0=Relay confirmed.;th u(%!/subspace,Relaying message from %0: %1)
+&CMD_REPAIR $T: Basebot Parent v1=^<Subspace> *|*|*|*|* control, repair *|*:@assert u(%!/is_it_me_name,%4);@assert u(%!/is_it_me_freqenc,%0,%1);&d_repairname %!=%5;&d_repairing %!=1;ext dam stat on %5;th u(subspace,Commencing repairs on %5)
+&CMD_REQUESTCOORDS $T: Basebot Parent v1=^<Subspace> *|*|*|*|* control, req* coord*|*:@assert u(%!/is_it_me_name,%4);@assert u(%!/is_it_me_freqenc,%0,%1);th [setq(c,[SU2PC(sdb(get,[u([zone([loc(me)])]/sdb)],coords,x))]%B[SU2PC(sdb(get,[u([zone([loc(me)])]/sdb)],coords,y))]%B[SU2PC(sdb(get,[u([zone([loc(me)])]/sdb)],coords,z))])][u(%!/subspace,Coordinates: %qc)]
+&CMD_RESET $T: Basebot Parent v1=^<Subspace> *|*|*|*|* control, reset|*:@assert u(%!/is_it_me_name,%4);@assert u(%!/is_it_me_freqenc,%0,%1);unman;@fo %!=man [v(cons)];@wait 5={mode fighter};@wait 10={act sys;main 50;aux 50;batt 50;srs on;lrs on;ew on;ras};th u(subspace,u(msg_reset))
+&CMD_SEAL $T: Basebot Parent v1=^<Subspace> *|*|*|*|* control, SEAL *|*:@assert u(%!/is_it_me_name,%4);@assert u(%!/is_it_me_freqenc,%0,%1);SEAL %5;th u(subspace,Sealing %5)
+&CMD_SENSORREPORT $T: Basebot Parent v1=^<Subspace> *|*|*|*|* control, sen* rep*|*:@assert u(%!/is_it_me_name,%4);@assert u(%!/is_it_me_freqenc,%0,%1);th toolkit(basebot,senrep,%2,v(name))
+&CMD_SETTINGS $T: Basebot Parent v1=$change * to *:th [switch(%0,*freq*,[set(%!,frequency:[right(round(add(1000,%1),3),7)])][pemit(%#,prefix(Frequency changed to %1,Mx))],*enc*,[set(%!,encryption:%1)][pemit(%#,prefix(Encryption changed to %1,Mx))],pemit(%#,prefix(Invalid setting\, valid ones are: frequency and encryption,Mx)))]
+&CMD_SHIELDS $T: Basebot Parent v1=This trunk deals with the shields.
+&CMD_SHIELDS`LOWER $T: Basebot Parent v1=^<Subspace> *|*|*|*|* control, set shi* off|*:@assert u(%!/is_it_me_name,%4);@assert u(%!/is_it_me_freqenc,%0,%1);las;th u(subspace,u(msg_shields`lower))
+&CMD_SHIELDS`RAISE $T: Basebot Parent v1=^<Subspace> *|*|*|*|* control, set shi* on|*:@assert u(%!/is_it_me_name,%4);@assert u(%!/is_it_me_freqenc,%0,%1);ras;th u(subspace,u(msg_shields`raise))
+&CMD_SSENREP $T: Basebot Parent v1=^<Subspace> *|*|*|*|* control, set con* rep* *|*:@assert u(%!/is_it_me_name,%4);@assert u(%!/is_it_me_freqenc,%0,%1);th [switch(%7,1,[set(%!,cont-report:1)],[set(%!,cont-report:0)])][u(subspace,Contact reporting toggled [switch(%7,1,On,Off)])]
+&CMD_STATIONS $T: Basebot Parent v1=^* says, "At your station*:man special;@wait 1=mode fighter
+&CMD_STATUS $T: Basebot Parent v1=^<Subspace> *|*|*|*|* control, stat*|*:@assert u(%!/is_it_me_name,%4);@assert u(%!/is_it_me_freqenc,%0,%1);th toolkit(basebot,status,%2,v(name),%!)
+&CMD_TALK $T: Basebot Parent v1=^<Subspace> *|*|*|*|* control, talk|1:@assert u(%!/is_it_me_name,%4);@assert u(%!/is_it_me_freqenc,%0,%1);th u(%!/subspace,What the hell you want me to talk about, freak?)
+&CMD_UNCLAMP $T: Basebot Parent v1=^<Subspace> *|*|*|*|* control, UNCLAMP *|*:@assert u(%!/is_it_me_name,%4);@assert u(%!/is_it_me_freqenc,%0,%1);UNCLAMP %5;th u(%!/subspace,Unclamping %5)
+&CMD_UNSEAL $T: Basebot Parent v1=^<Subspace> *|*|*|*|* control, UNSEAL *|*:@assert u(%!/is_it_me_name,%4);@assert u(%!/is_it_me_freqenc,%0,%1);UNSEAL %5;th u(subspace,Unsealing %5)
+&CMD`VIEWLOG $T: Basebot Parent v1=$Display Log:th IF(orflags(%#,Wrk),[u(f`Landisplay)],[IF([GTE([First([Extract(u(%z/SECURITY`LIST),[Match(u(%z/SECURITY`LIST),*|%#)],1)],|)],3)],[u(f`Landisplay)],[pemit(%#,LOG[colon()]Permission Denied.)])])
+&CONT-REPORT $T: Basebot Parent v1=1
+@DEBUGFORWARDLIST $T: Basebot Parent v1=#6
+@set $T: Basebot Parent v1/DEBUGFORWARDLIST=no_command no_inherit prefixmatch
+&F $T: Basebot Parent v1=
+&F`LANDISPLAY $T: Basebot Parent v1=[pemit(%#,[colon()]Landing Log[space(60)][colon()]%R[u(log`landings)]%R%R[colon()][ictime()][space(47)][colon()])]
+&F.LISTENS2S $T: Basebot Parent v1=
+&F`LISTENTRANS1 $T: Basebot Parent v1=^[Transmission from * bearing* * * ]*:th [set(%!,F`IN:%0|%2|%3|0)]
+&F`LISTENTRANS2 $T: Basebot Parent v1=^[Transmission from * bearing* * * range* *]*:th [set(%!,F`IN:%0|%2|%3|%5)]
+&F`LISTENTRANS3 $T: Basebot Parent v1=^[Transmission from * bearing* * * ]%r<*>--<*>:say yes
+&IS_IT_ME_FREQENC $T: Basebot Parent v1=if(and(match(%0,u(%!/frequency)),match(%1,u(%!/encryption))),1,0)
+&IS_IT_ME_NAME $T: Basebot Parent v1=if(strmatch(v(name),*%0*),1,0)
+&LN_ATTACKED $T: Basebot Parent v1=^[WARNING]--[* (*) firing*:all weapons online;snap %1;intercept %1;@wait 1=fire;say Incoming fire from %0.
+&LN_AUTOREP1 $T: Basebot Parent v1=^[* Damage*:repa [first(%0)]
+&LN_AUTOREP2 $T: Basebot Parent v1=^[* Weapon *? * Damage*:repa %0 %1
+&LN_AUTOREP3 $T: Basebot Parent v1=^[* Inoperative*:repa [first(%0)]
+&LN_AUTOREP4 $T: Basebot Parent v1=^[* Weapon *? * Inoperative*:repa %0 %1
+&LN_AUTOREP6 $T: Basebot Parent v1=^[* Weapon *? * Destroyed*:repa %0 %1
+&LN_BEAMCHARGE $T: Basebot Parent v1=^[Beam capacitor fully charged]:fire
+&LN_BORDER $T: Basebot Parent v1=This trunk stores the Inbound and Outbound stuff.
+&LN_BORDER`CROSSING $T: Basebot Parent v1=~^[WARNING]--[* border crossing reported at *]:th if(u(%!/border-report),u(subspace,%0 bearing [extract(setr(5,iter(xyz2sph(setr(1,extract(setr(0,vsub(%1,u(fn_coords))),1,1)),setr(2,extract(%q0,2,1)),setr(3,extract(%q0,3,1))),round(##,2))),1,2)] range \[[extract(%q5,3,1)]\] at %1.))
+&LN_BORDER`INBOUND $T: Basebot Parent v1=^[WARNING]--[Inbound border crossing reported at *]:@break not(t(u(%!/border-report)));th u(subspace,u(msg_border`inbound,%0))
+&LN_BORDER`OUTBOUND $T: Basebot Parent v1=^[WARNING]--[Outbound border crossing reported at *]:@break not(t(u(%!/border-report)));th u(subspace,u(msg_border`outbound,%0))
+&LN_CONTACT $T: Basebot Parent v1=This trunk stores everything dealing with contacts.
+&LN_CONTACT`CLOAK $T: Basebot Parent v1=^[contact (*) engages its cloaking device]:@break not(t(u(%!/cont-report)));think [u(subspace,Contact %(%0%) engages its cloaking device.)]
+&LN_CONTACT`DEAD $T: Basebot Parent v1=^[* (*) has been *];th u(subspace,u(msg_contact`dead,%0,%1,%2))
+&LN_CONTACT`DOCK $T: Basebot Parent v1=^[* docking with *]:@break not(t(u(%!/cont-report)));think [u(subspace,%0 docks with %1)]
+&LN_CONTACT`FIRE $T: Basebot Parent v1=^[* fires and hits contact (*)]:@break not(t(u(%!/cont-report)));think [u(subspace,%0 fires on contact %(%1%).)]
+&LN_CONTACT`LAND $T: Basebot Parent v1=^[* landing on *]:@break not(t(u(%!/cont-report)));think [u(subspace,%0 lands on %1)][set(me,Log`Landings:[u(log`landings)]%R[ICTIME()]%B-%B%0 lands on %1.)]
+&LN_CONTACT`LAUNCH $T: Basebot Parent v1=^[* launching from *]:@break not(t(u(%!/cont-report)));think [u(subspace,%0 launches from %1)][set(me,Log`Landings:[u(log`landings)]%R[ICTIME()]%B-%B%0 launches from on %1.)]
+&LN_CONTACT`LOST $T: Basebot Parent v1=^[WARNING]--[* contact lost\: *]:th if(and(match(before(%0, ),Ship),xget(%!,cont-report)),u(subspace,u(msg_contact`lost,%0,%1)))
+&LN_CONTACT`NEW $T: Basebot Parent v1=^[WARNING]--[New sensor contact (*)\: *]:th if(and(match(%1,Ship),xget(%!,cont-report)),u(subspace,u(msg_contact`new,%0,%1)))
+&LN_CONTACT`UNDOCK $T: Basebot Parent v1=^[* undocking from *]:@break not(t(u(%!/cont-report)));think [u(subspace,%0 undocks from %1)]
+&LN_DAMAGEREPAIR $T: Basebot Parent v1=Autorepair code
+&LN_DAMAGEREPAIR`LN_EXTDAMSTAT $T: Basebot Parent v1=^*--[Damage Control Status Report]-----------------------------------------------*:@fo %!=ext repair [setq(0,trim(edit([extract(%1,12,3)] ,-,),%r))][ifelse(strmatch(setr(1,[ifelse(match(right(%q0,1),\%),right(extract(%q0,1,2),sub(strlen(extract(%q0,1,2)),1)),%q0)]),*%%*),right(after(first(%q1),%r),sub(strlen(%q1),1)),switch(words(%q1),2,right(trim(%q1),sub(strlen(trim(%q1)),0)),3,right(trim(%q1),sub(strlen(trim(%q1)),1))))] on [xget(%!,d_repairname)]
+&LN_DAMAGEREPAIR`LN_NOTCONN $T: Basebot Parent v1=^* is not connected.:think [u(%!/LN_DAMAGEREPAIR`REPERROR)]
+&LN_DAMAGEREPAIR`LN_NOTVALID $T: Basebot Parent v1=^That is not a valid subject.:think [u(%!/LN_DAMAGEREPAIR`REPERROR)]
+&LN_DAMAGEREPAIR`LN_REPAIRDONE $T: Basebot Parent v1=^Invalid system specification.:@break or(not(hasattr(%!/D_REPAIRING),not(u(%!/D_REPAIRING)))=think [u(subspace,Repairs on [xget(%!,d_repairname)] completed.)][set(%!,d_repairing:0)][wipe(%!/d_repairname)]
+&LN_DAMAGEREPAIR`LN_REPCAPFULL $T: Basebot Parent v1=^[Repair capacity maximized]:@switch [xget(%!,d_repairing)]=1,ext dam stat on [xget(%!,d_repairname)]
+&LN_DAMAGEREPAIR`REPERROR $T: Basebot Parent v1=[u(%!/subspace,[xget(%!,d_repairname)] is not a valid repair target.)][set(%!,d_repairing:0)][set(%!,d_repairname:)]
+&LN_DAMAGEREPAIR`SYSCOMPLETE $T: Basebot Parent v1=^[*]--[* repairs complete]:@break not(xget(%!,d_repairing));th [u(%!/subspace,%1 repaired on [xget(me,d_repairname)])]
+&LN_DISTRESS $T: Basebot Parent v1=^[WARNING]--[Excessive damage. All systems shutting down]:distress
+&LN_HAIL $T: Basebot Parent v1=^<*>--<RELAY: *>:th u(subspace,Relay from %0: %1)
+&LN_LOCKED $T: Basebot Parent v1=^[WARNING]--[Weapon lock from * (*) detected]:red alert;preset load battle;@cemit/noisy Admin=[name(zone(me))] detected weapons lock from %0;snap %1;s2s %1=Attention %0.  Unlock your weapons immediately or you will be fired upon.
+&LN_MANNING $T: Basebot Parent v1=^[*]--[You man *.]:mode fighter;act sys;preset load normal
+&LN_MISSCHARGE $T: Basebot Parent v1=^[Missile capacitor fully charged]:fire
+&LN_RELIEVE $T: Basebot Parent v1=^[*]--[* relieves * and mans *.]:@break not(t(strmatch(%3,*[v(cons)]*)));@fo %!=man [v(cons)];@wait 5={mode fighter};@wait 10={act sys;main 50;aux 50;batt 100;srs on;lrs on;ew on};th u(subspace,u(msg_reset))
+&LN_S2S $T: Basebot Parent v1=This trunk stores everything dealing with s2s.
+&LN_S2S`NORMAL $T: Basebot Parent v1=^[Transmission from * bearing: * @ *]:th [u(subspace,Transmission from <%0> bearing <%1>,%z#)]
+&LN_S2S`RELAY $T: Basebot Parent v1=^*[Transmission from *]*<*:th u(%!/subspace,\[Transmission from %1]) ; th u(%!/subspace,Relayed from [before(%3,%r)])
+&LN_VIEWSCREEN $T: Basebot Parent v1=
+&LN_VIEWSCREEN`INCOMING $T: Basebot Parent v1=^Incoming hail from * (*).:th [u(subspace,Incoming Viewscreen hail from %0 %(%1%))]
+&LOG $T: Basebot Parent v1=
+&LOG`LANDINGS $T: Basebot Parent v1=
+&MSG_AUTOFIRE $T: Basebot Parent v1=
+&MSG_AUTOFIRE`REPORTS $T: Basebot Parent v1=Base Autofire reports turned [switch(%0,1,On,Off)]
+&MSG_BORDER $T: Basebot Parent v1=This trunk stores all the border messages.
+&MSG_BORDER`INBOUND $T: Basebot Parent v1=Inbound border crossing at %0
+&MSG_BORDER`OUTBOUND $T: Basebot Parent v1=Outbound border crossing at %0
+&MSG_BORDER`REPORTS $T: Basebot Parent v1=Border reports turned [switch(%0,1,On,Off)]
+&MSG_CONTACT $T: Basebot Parent v1=This trunk stores all the contact messages.
+&MSG_CONTACT`DEAD $T: Basebot Parent v1=%0 \(%1\) has been %2
+&MSG_CONTACT`LOST $T: Basebot Parent v1=%0 contact lost: %1
+&MSG_CONTACT`NEW $T: Basebot Parent v1=New sensor contact \(%0\)\: %1
+&MSG_RESET $T: Basebot Parent v1=Resetting Systems
+&MSG_SETTING $T: Basebot Parent v1=
+&MSG_SETTING`ENCRYPTION $T: Basebot Parent v1=Encryption changed to: %0
+&MSG_SETTING`FREQUENCY $T: Basebot Parent v1=Frequency changed to: %0
+&MSG_SHIELDS $T: Basebot Parent v1=
+&MSG_SHIELDS`LOWER $T: Basebot Parent v1=All Shields turned off
+&MSG_SHIELDS`RAISE $T: Basebot Parent v1=All Shields turned on
+&MSG_SYSTEMS $T: Basebot Parent v1=This trunk stores all the systems messages.
+&MSG_SYSTEMS`ACTIVATE $T: Basebot Parent v1=All Systems Activating
+&MSG_SYSTEMS`DEACTIVATE $T: Basebot Parent v1=All Systems shutting down.
+&MSG_SYSTEMS`POWER $T: Basebot Parent v1=[capstr(%0)] %1 set to: %2%%
+&RANGE $T: Basebot Parent v1=30
+&SUBSPACE $T: Basebot Parent v1=cemit(subspace,[u(%!/frequency)]|[u(%!/encryption)]|Control|[zone(loc(%!))]|{%0}|[iter(inrange(u(zone(loc(%!))/sdb),v(RANGE)),extract(##,2,1,|), )] [u(zone(loc(%!))/sdb)],noisy)
+&TIME $T: Basebot Parent v1=10

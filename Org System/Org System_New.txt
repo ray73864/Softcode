@@ -1,0 +1,185 @@
+@sql CREATE TABLE orgsys_orglist (ID INT NOT NULL AUTO_INCREMENT,orgtype VARCHAR(10) NOT NULL,parentorg INT,displayname VARCHAR(50), status VARCHAR(10) NOT NULL, shortname VARCHAR(20), name VARCHAR(50) NOT NULL, description TEXT, PRIMARY KEY (id))
+@sql CREATE TABLE orgsys_membership (ID INT NOT NULL AUTO_INCREMENT, playerid VARCHAR(18) NOT NULL, org INT NOT NULL, status VARCHAR(10) NOT NULL, rank INT, position VARCHAR(100), PRIMARY KEY (ID))
+@sql CREATE TABLE orgsys_ranks (ID INT NOT NULL AUTO_INCREMENT, org INT NOT NULL, rank INT NOT NULL, male VARCHAR(50), female VARCHAR(50), PRIMARY KEY (ID))
+@sql CREATE TABLE orgsys_managers (ID INT NOT NULL AUTO_INCREMENT, orgid INT NOT NULL, playerID VARCHAR(18) NOT NULL, PRIMARY KEY (ID))
+@sql CREATE TABLE orgsys_spaceobjects (ID INT NOT NULL AUTO_INCREMENT, orgid INT NOT NULL, objectID VARCHAR(18) NOT NULL, objecttype VARCHAR(10) NOT NULL, PRIMARY KEY (ID))
+@sql CREATE TABLE orgsys_races (ID INT NOT NULL AUTO_INCREMENT, orgid INT NOT NULL, race VARCHAR(18) NOT NULL, PRIMARY KEY (ID)) 
+
+@create $MR: Org Commands
+@link $MR: Org Commands = #0
+@set $MR: Org Commands = WIZARD
+&CMD $MR: Org Commands=
+&CMD`@EMPIRES $MR: Org Commands=$@emp*:th [u(fun`@empires)]
+&CMD`BUILDER $MR: Org Commands=$org/builder *=*$:@assert u(lock.admin);@assert setr(m,toolkit(org,orgnum,%0);@nspemit %#=u(FUN`BUILDER,%qM,%1)
+&CMD`CLEANUP $MR: Org Commands=$^org cleanup(?\: (\w.+))?$:th [if(u(lock.admin),if(%1,org(localcleanup,%1),org(globalcleanup)))]
+@set $MR: Org Commands/CMD`CLEANUP=regexp
+&CMD`DEMOTE $MR: Org Commands=$Demote *:th [setq(P,[pmatch(%0)])][if(cor(Admin(%#),strmatch([org(mainsub,%qP)],[org(mainsub,%#)])),[setq(P,[pmatch(%0)])][if(cor(Admin(%#),gt([rank(%#)],[rank(%qP)])),[setq(R,[if(t(rank(%qP)),[extract(u(#16622/RANK`LIST`[org(mainsub,%qP)]),[rank(%qP)],1,|)],[extract(u(#16622/RANK`LIST`[org(mainsub,%qP)]),1,1,|)])])][attrib_set(%qP/Rank,%qR)][nspemit(%#,prefix(You have demote [name(%qP)] to [last(%qR,~)]))][nspemit(%qP,prefix(You have been demoted to [last(%qR,~)]))],[nspemit(%#,prefix(You do not hold a high enough rank to do that.))])],[nspemit(%#,prefix(No permission to do that.))])]
+&CMD`DEMOTE1 $MR: Org Commands=$Demote1 *:th [setq(P,[pmatch(%0)])][if(strmatch([org(mainsub,%qP)],[org(mainsub,%#)]),[setq(P,[pmatch(%0)])][if(gt([rank(%#)],[rank(%qP)]),[setq(R,[if(t(rank(%qP)),[extract(u(#16622/RANK`LIST`[org(mainsub,%qP)]),[rank(%qP)],1,|)],[extract(u(#16622/RANK`LIST`[org(mainsub,%qP)]),1,1,|)])])][attrib_set(%qP/Rank,%qR)][nspemit(%#,prefix(You have promoted [name(%qP)] to [last(%qR,~)]))][nspemit(%qP,prefix(You have been promoted to [last(%qR,~)]))],[nspemit(%#,prefix(You do not hold a high enough rank to do that.))])],[nspemit(%#,prefix(No permission to do that.))])]
+&CMD`HELP $MR: Org Commands=$org help: @nspe %#=iter(lattr(%!/CMD**),after(##,CMD`)%RSYNTAX: [ansi(c,before(get(%!/%i0),:))],,%R)
+&CMD`LISTRANKS $MR: Org Commands=$^list ranks(?\: (\w.+))?:@nspemit %#=[header(morgname([setr(1,if(and(isadmin(%#),%1),org(orgnum,%1),org(mainsub,%#)))]),Rank List)]%R%R[mapsql(#lambda/align(3 30 30,\%1,\%2,\%3),org(ranks,%q1),%r)]%R%R[header(morgname(%q1),Rank List)]
+@set $MR: Org Commands/CMD`LISTRANKS=regexp
+&CMD`ORG $MR: Org Commands=
+&CMD`ORG.ATTACH $MR: Org Commands=$^org attach/(ship|base|planet) (.+)=(\w.+)$:@nspemit %#=[if(u(lock.royal),if(setr(n,objid(spacenum(%2*))),if(setr(m,org(orgnum,%3)),if(setr(s,sql(select COUNT(ID) from orgsys_spaceobjects where orgid='%qM' and objectid='%qN')),ansi(r,Space-object already a member of that organisation),[sql({insert into orgsys_spaceobjects (orgid,objectid,objecttype) values (%qM,'%qN','%1')})][ansi(c,[ansi(hy,name(%qN))] \([sql({select last_insert_id()})]\) attached to organisation [ansi(hy,org(orgname,%qM))] \(%qM\).)]),[ansi(r,Invalid organisation)]),[ansi(r,Invalid space-object)]))]
+@set $MR: Org Commands/CMD`ORG.ATTACH=regexp
+&CMD`ORG.DESC $MR: Org Commands=$org desc* *:th [if(u(lock.admin),[if(strmatch(%1,*=*),[u(fun`org.desc,before(%1,=),after(%1,=))],u(fun`msg,%#,{Correct syntax is [ansi(hy,org desc %<org%>=%<description%>)].}))])]
+&CMD`ORG.DETACH $MR: Org Commands=$org detach*:th [if(u(lock.royal),[if(strmatch(%0,%b*),[u(fun`org.detach1,after(%0,%b))],u(fun`msg,%#,{Correct syntax is [ansi(hy,org detach %<character%>)].}))])]
+&CMD`ORG.DETACHSPACE $MR: Org Commands=$^org spacedetach (\w.+)$:@nspemit %#=[if(u(lock.royal),if(setr(n,objid(spacenum(%1*))),if(not(setr(s,sql(select COUNT(ID) from orgsys_spaceobjects where objectid='%qN'))),ansi(r,Space-object already not a member of any organisation),[sql({delete from orgsys_spaceobjects where objectid='%qN'})][ansi(c,[ansi(hy,name(%qN))] detached.)]),[ansi(r,Invalid space-object)]))]
+@set $MR: Org Commands/CMD`ORG.DETACHSPACE=regexp
+&CMD`ORG.DISPLAYNAME $MR: Org Commands=$org disp* *:th [if(u(lock.admin),[if(strmatch(%1,*=*),[u(fun`org.displayname,before(%1,=),after(%1,=))],u(fun`msg,%#,{Correct syntax is [ansi(hy,org displayname %<org%>=%<ansi text%>)].}))])]
+&CMD`ORG.JOIN $MR: Org Commands=$org join *:th [if(u(lock.admin),[if(strmatch(%0,*=*),[setq(p,org(getchar,before(%0,=)))][setq(o,org(orgnum,after(%0,=)))][switch([t(%qp)][t(%qo)],11,[if(match(sql(select orgtype from orgsys_orglist where id=%qo),MO),if(org(morg,%qp),[u(fun`msg,%#,{[name(%qp)] already belongs to a masterorg.})],[u(fun`msg,%#,{[name(%qp)] added to [org(orgname,%qo)].})][u(fun`msg,%qp,{You've been added to [org(orgname,%qo)].})][u(fun`org.join,%qp,%qo)]),[switch([t(match([org(orgs,%qp)],%qo))][t(org(morg,%qp))],01,[u(fun`msg,%#,{[name(%qp)] joined to [org(orgname,%qo)].})][u(fun`msg,%qp,{You have been added to [org(orgname,%qo)].})][u(fun`org.join,%qp,%qo,[not(t(org(mainsub,%qp)))])],1?,[u(fun`msg,%#,{[name(%qp)] already belongs to [org(orgname,%qo)].})],?0,[u(fun`msg,%#,{[name(%qp)] does not have a masterorg set.})])])],0?,[u(fun`msg,%#,That character could not be found.)],?0,[u(fun`msg,%#,What suborg do you mean?)])],u(fun`msg,%#,Proper syntax is [ansi(hy,org join %<player%>=%<org%>)].))])]
+&CMD`ORG.LIST $MR: Org Commands=$org list:th [if(setr(o,org(morg,%:)),[nspemit(%#,[header(,Organizational Listing,[org(orgname,%qo)])]%R%R[u(fun`suborglist,%qo)]%R%R[header(,%?,[u(%!/version)])])],[u(fun`@empires)])]
+&CMD`ORG.LIST.2 $MR: Org Commands=$org list *:th [if(u(lock.admin),[if(setr(o,org(orgnum,[secure(%0)])),[nspemit(%#,[u(fun_header,Organizational Listing,[org(orgname,%qo)])]%R%R[u(fun`suborglist,%qo)]%R%R[u(fun_footer)])],[u(fun`msg,%#,That is not a valid org.)])]
+
+&CMD`ORG.MANAGER.ADD $MR: Org Commands=$org manager add *=*:th 
+[if(u(lock.admin),
+	if(setr(o,org(orgnum,%0)),
+		if(setr(p,objid(*%1)),
+			if(org(orgmanager,%qo,%qp),
+				nspemit(%#,Player is already an org manager for that org)
+			,
+				sql({insert into orgsys_managers (orgid,playerid) values (%qo,'%qp')})[nspemit(%#,Player made a manager of that org)]
+			)
+		,
+			nspemit(%#,Invalid Player)
+		)
+	,
+		nspemit(%#,Invalid org)
+	)
+)]
+
+&CMD`ORG.MANAGER.DEL $MR: Org Commands=$org manager del *=*:th 
+[if(u(lock.admin),
+	if(setr(o,org(orgnum,%0)),
+		if(setr(p,objid(*%1)),
+			if(org(orgmanager,%qo,%qp),
+				sql({delete from orgsys_managers where orgid=%qo and playerid='%qp'})[nspemit(%#,Player is no longer a manager of that org)]
+			,
+				nspemit(%#,Player is already an org manager for that org)
+			)
+		,
+			nspemit(%#,Invalid Player)
+		)
+	,
+		nspemit(%#,Invalid org)
+	)
+)]
+
+&CMD`ORG.NEWMO $MR: Org Commands=$org newmo*:th [if(u(lock.wizard),[if(strmatch(%0,*=*),[u(fun`org.newmo,squish(before(%0,=)),after(%0,=))],u(fun`msg,%#,{Correct syntax is [ansi(hy,org newmo %<name%>=%<abbreviation%>)].}))])]
+&CMD`ORG.NEWSO $MR: Org Commands=$org newso *=*:th [if(u(lock.admin),[if(setr(0,org(orgnum,[secure(%1)])),[u(fun`org.newso,%0,%q0)])]
+&CMD`ORG.OLD_TRANSFER $MR: Org Commands=$org trans* *:th [if(u(lock.admin),[if(strmatch(%1,*=*),[u(fun`org.transfer,before(%1,=),after(%1,=))],u(fun`msg,%#,{Correct syntax is [ansi(hy,org transfer %<character%>=%<org%>)].}))])]
+@set $MR: Org Commands/CMD`ORG.OLD_TRANSFER=no_command
+&CMD`ORG.PLAYERS $MR: Org Commands=$org players:th [if(setr(o,org(morg,%:)),[u(fun`org.players,%qo)],[u(fun`msg,%#,You do not belong to a masterorg.)])]
+&CMD`ORG.PLAYERS.2 $MR: Org Commands=$org players *:th [if(u(lock.admin),[if(setr(o,org(orgnum,%0)),[u(fun`org.players,%qo)],[u(fun`msg,%#,That is not a valid org.)])])]
+&CMD`ORG.RANK $MR: Org Commands=$org rank *=*:th [if(u(lock.manager),[if(setr(o,toolkit(org,orgnum,%0)),[sql(UPDATE orgsys_membership SET rank=],ansi(r,Invalid organisation))],ansi(r,You must be a manager to use this command.))]
+&CMD`ORG.RANKS $MR: Org Commands=$org rank */*=*/*:th [if(u(lock.manager,%#),[if(setr(o,org(orgnum,%0)),u(fun`org.ranks,%qo,%1,%2,%3))]
+&CMD`ORG.REMOVE $MR: Org Commands=$org rem* *:th [if(u(lock.admin),[if(strmatch(%1,*=*),[u(fun`org.remove1,before(%1,=),after(%1,=))],u(fun`msg,%#,{Correct syntax is [ansi(hy,org remove %<player%>=%<org%>)].}))])]
+&CMD`ORG.RENAME $MR: Org Commands=$org rename *:th [if(u(lock.admin),[if(strmatch(%0,*=*),[u(fun`org.rename,before(%0,=),after(%0,=))],u(fun`msg,%#,{Correct syntax is [ansi(hy,org displayname %<org%>=%<ansi text%>)].}))])]
+&CMD`ORG.STATUS $MR: Org Commands=$org stat* *:th [if(u(lock.admin),[if(strmatch(%1,*=*),[u(fun`org.status,before(%1,=),after(%1,=))],u(fun`msg,%#,{Correct syntax is [ansi(hy,org status %<org%>=%<OPEN|CLOSED|OOC|NPC%>)].}))])]
+&CMD`ORG.TRANSFER $MR: Org Commands=$org transfer *=*:@assert [u(lock.manager,%0)]={@nspemit %#=[u(fun`msg.unauthorized,%#)]};@assert t(getplayer(%0))={th u(fun`msg,%#,That character could not be found.)};@assert t(setr(O,org(orgnum,%1)))={th u(fun`msg,%#,That is not a valid org.)};@assert t(match(org(PARENTCHAINBYNAME,%1),morg(%0)))={th u(fun`msg,%#,That Suborg is not a member of [morgname(morg(%0))])};@assert t(match(sql(select orgtype from orgsys_orglist where id=%qO),SO))={th u(fun`msg,%#,That is not a valid suborg)};th sql({DELETE FROM orgsys_membership WHERE playerid='[getplayer(%0)]' AND status='MAIN'})[u(fun`org.join,[getplayer(%0)],%qo,1)][u(fun`msg,[getplayer(%0)],{You've been added to [org(orgname,%qO)].})][u(fun`msg,%#,{[name(getplayer(%0))] has been transferred to the [org(orgname,%qO)].})]
+&CMD`ORG`ADDRACE $MR: Org Commands=$^org/race/(add|delete) (\w+)=(\S+)$:@break isstaff(%#)={@break t(isdbref(%3))={@break t(setr(O,org(orgnum,%2)))={@assert t(org(hasrace,%qO,%3))={@sql INSERT INTO orgsys_races (orgid,race) VALUES ('%qO','[sqlescape(objid(%3))]');@nspemit %#=ansi(c,You have added [ansi(hy,name(%3))] to the [ansi(hy,org(orgname,%qO))] race list)};@nspemit %#=ansi(r,[name(%3)] is already on the [org(orgname,%qO)] race list)};@nspemit %#=ansi(r,Invalid Organisation)};@nspemit %#=ansi(r,Invalid Race Dbref#)};@nspemit %#=ansi(r,Permission Denied)
+@set $MR: Org Commands/CMD`ORG`ADDRACE=regexp
+&CMD`POSITION $MR: Org Commands=$^position (.+)=(.+)$:@assert [u(lock.manager,%1)]={@nspemit %#=[u(fun`msg.unauthorized,%#)]};@assert t(setr(P,org(getchar,%1)))={u(%!/fun`msg,%#,That character could not be found.)};th u(%!/fun`position,%:,%qp,sorg(%1),%2)
+@set $MR: Org Commands/CMD`POSITION=regexp
+&CMD`PROMOTE $MR: Org Commands=$Promote *:@assert cor(isadmin(%#),not(strmatch(%:,getplayer(*%0))))={@nspemit %#=prefix(You may not increase your own rank.)};@assert or(isadmin(%#),u(lock.manager),strmatch(org(mainsub,setr(P,getplayer(*%0))),org(mainsub,%#)))={@nspemit %#=prefix(No permission to do that.)};@assert cor(isadmin(%#),u(lock.manager),gt(rank(%#),if(hasattrval(%qP,rank),rank(%qP),0)))={@nspemit %#=prefix(You do not hold a high enough rank to do that.)};th [setq(R,if(hasattrval(%qP,rank),extract(u(#16622/RANK`LIST`[org(mainsub,%qP)]),add(rank(%qP),2),1,|),extract(u(#16622/RANK`LIST`[org(mainsub,%qP)]),1,1,|)))][attrib_set(%qP/Rank,%qR)];@nspemit %#=prefix(You have promoted [name(%qP)] to [last(%qR,~)]);@nspemit %qP=prefix(You have been promoted to [last(%qR,~)])
+&CMD`PROMOTE-OLD $MR: Org Commands=promote *:th [if(u(lock.manager,%0),[if(strmatch(%0,*=*),[setq(p,org(getchar,before(%0,=)),s,org(orgnum,after(%0,=)))][switch([t(%qp)][t(%qs)],11,if(match(if(orflags(%#,Wr),org(orgs,%qp),setinter(org(orgs,%:),org(orgs,%qp))),%qs),u(%!/fun`promote,%:,%qp,%qs),u(%!/fun`msg,%#,You are not in the same suborg.)),0?,u(%!/fun`msg,%#,That character could not be found.),?0,u(%!/fun`msg,%#,That is not a valid suborg.))],[setq(p,org(getchar,%0))][if(%qp,[setq(s,setinter(org(orgs,%:),org(orgs,%qp)))][switch(words(%qs),0,u(%!/fun`msg,%#,You are not in any of the same suborgs as [name(%qp)].),1,u(%!/fun`promote,%:,%qp,%qs),>1,u(%!/fun`msg,%#,You are in multiple suborgs with [name(%qp)].  Please specify with [ansi(hy,promote %<name%>=%<suborg%>)].))],u(%!/fun`msg,%#,That character could not be found.))])])]
+&CMD`PROMOTE1 $MR: Org Commands=$Promote1 *:th [setq(P,[pmatch(%0)])][if(strmatch([org(mainsub,%qP)],[org(mainsub,%#)]),[setq(P,[pmatch(%0)])][if(gt([rank(%#)],[rank(%qP)]),[setq(R,[if([hasattrval(%qP,rank)],[extract(u(#16622/RANK`LIST`[org(mainsub,%qP)]),[add([rank(%qP)],2)],1,|)],[extract(u(#16622/RANK`LIST`[org(mainsub,%qP)]),1,1,|)])])][attrib_set(%qP/Rank,%qR)][nspemit(%#,prefix(You have promoted [name(%qP)] to [last(%qR,~)]))][nspemit(%qP,prefix(You have been promoted to [last(%qR,~)]))],[nspemit(%#,prefix(You do not hold a high enough rank to do that.))])],[nspemit(%#,prefix(No permission to do that.))])]
+&CMD`SINFO $MR: Org Commands=$^org sinfo(?\:\s(.+))?$:@assert u(lock.admin);@nspemit %#=u(fun`sinfo,if(trim(%1),%1,name(zone(%L))))
+@set $MR: Org Commands/CMD`SINFO=regexp
+&CMD`SPACE-OBJECT $MR: Org Commands=$^org (ships|bases|planets)(?\: (\w.+))?$:@nspemit %#=u(fun`%1,if(%2,if(orflags(%#,Wr),org(orgnum,%2),morg(%#)),morg(%#)))
+@set $MR: Org Commands/CMD`SPACE-OBJECT=regexp
+&CMD`SPACE-OBJECT.UNKNOWN $MR: Org Commands=$^org/unknown (ships|bases)$:@assert isstaff(%#)={@nspemit %#=ansi(r,You are not allowed to do that.)};@nspemit %#=u(fun`unknown,%1)
+@set $MR: Org Commands/CMD`SPACE-OBJECT.UNKNOWN=regexp
+@DESCRIBE $MR: Org Commands=Commands for the OrgSys go here.
+@set $MR: Org Commands/DESCRIBE=no_command visual prefixmatch public nearby
+&FUN $MR: Org Commands=
+&FUN_FOOTER $MR: Org Commands=%r[header(%?,name(%#),ansi(hw,ictime(%#)),sub(width(%#),2),Gx)]
+&FUN_HEADER $MR: Org Commands=[header(ansi(hw,OrgSystem),%0,%1,sub(width(%#),2),Gx)]%r
+&FUN`@EMPIRES $MR: Org Commands=[setq(0,squish([setq(l,sql({select id, displayname from orgsys_orglist where orgtype='mo'},~,|))][iter(%ql,[setq(s,[before(##,|)])][squish([u(fun`allsuborgs,[before(##,|)])])][setq(c,)][iter(%qs,[setq(c,setunion(%qc,sql(select playerid from orgsys_membership where org=[itext(0)])))])][after(##,|)]-[words(%qc)]-[sql(select status from orgsys_orglist where id=[before(##,|)])]-[sql(select shortname from orgsys_orglist where id=[before(##,|)])],~,~)]))][nspemit(%#,[u(fun_header,org list)]%R[ansi(hR,[align(>7 <30 -9 <7,Alias,%bOrganization,Members,Status)])]%R[iter(%q0,[align(>7 <30 -9 <7,[elements(##,4,-)],%b[elements(##,1,-)],[elements(##,2,-)],[switch([elements(##,3,-)],OPEN,[ansi(hg,OPEN)],OOC,[ansi(r,OOC)],NPC,[ansi(g,NPC)],[ansi(hr,CLOSED)])])],~,%R)]%R[u(fun_footer)]%R)]
+&FUN`ALLSUBORGS $MR: Org Commands=[setq(a,setdiff(sql(select id from orgsys_orglist where orgtype='SO' and parentorg=%0),%qs))][if(%qa,[setq(s,setunion(%qs,%qa))][iter(%qa,u(fun`allsuborgs,[itext(0)]))])]
+&FUN`BASES $MR: Org Commands=[if(setr(B,sql({SELECT orgid, objectid FROM orgsys_spaceobjects WHERE orgid=%0 AND objecttype='base'},~,|)),[u(f_header,Base Listing)]%r[align(22 18 10 25,ansi(hg,Name),ansi(hg,Class),ansi(hg,Status),if(orflags(%#,Wr),ansi(hg,Location)))]%r[iter(sortkey(space_object_sort,%qB,,~),u(fun`bases`table,%i0),~,%r)]%r%r[u(f_footer)],u(f_msg,No [ansi(hy,name(%qa))] ships to display.))]
+&FUN`BASES`TABLE $MR: Org Commands=align(22 18 10 25,name(setr(1,after(%0,|))),u(%q1/class),u(l_status,%q1),if(orflags(%#,Wr),squish(u(l_location,%q1)))
+&FUN`BUILDER $MR: Org Commands=if(and(%0,%1),[setq(A,pcreate(%0,%1))][set(%qA,!FIXED)][setq(B,Builder Hide Immortal Login No_Pay No_Quota Unkillable)][iter(%qB,powers(%qA,##))][nspemit(%#,prefix([ansi(c,New Builder)] [ansi(yh,%0)] [ansi(c,created with password)] [ansi(yh,%1)],Gx))],u(f_msg,Invalid Username or Password))
+&FUN`DEMOTE $MR: Org Commands=[setq(0,u(#5824/fun.org`ranknum,%0,%2),1,u(#5824/fun.org`ranknum,%1,%2))][if(cor(orflags(%0,Wr),gte(sub(%q0,%q1),1)),[if(isint(sql(select rank from orgsys_ranks where org='%2' and rank='[sub(%q1,1)]')),[sql(update orgsys_membership set rank='[sub(%q1,1)]' where org='%2' and playerid='%1')][u(%!/fun`msg,%0,You demote [name(%1)] to rank [u(#5824/fun.org`rank,%1,%2)].)][u(%!/fun`msg,%1,[name(%0)] demotes you to rank [u(#5824/fun.org`rank,%1,%2)].)],u(%!/fun`msg,%0,There is not a lower rank to demote to.))],u(%!/fun`msg,%0,You can't demote that character.))]
+&FUN`MSG $MR: Org Commands=[nspemit(%0,prefix({%1},,OrgSys))]
+&FUN`MSG.UNAUTHORIZED $MR: Org Commands=[nspemit(%0,prefix([ansi(hr,You are not authorized to do that.)],,OrgSys))]
+&FUN`ORG.DESC $MR: Org Commands=[if(setr(o,org(orgnum,%0)),[sql(update orgsys_orglist set description='[sqlescape(%1)]' where id=%qo)][u(fun`msg,%#,{Description for [org(orgname,%qo)] set.})],[u(fun`msg,%#,That is not a valid org.)])]
+&FUN`ORG.DETACH $MR: Org Commands=sql({delete from orgsys_membership where playerid='%0'})
+&FUN`ORG.DETACH1 $MR: Org Commands=[if(setr(p,org(getchar,%0)),[if(or(org(orgs,%qp),org(morg,%qp)),[u(fun`msg,%#,{[name(%qp)] has been detached and removed from all orgs and suborgs.})][u(fun`msg,%qp,{You've been removed from all orgs and suborgs.})][u(fun`org.detach,%qp)],[u(fun`msg,%#,{[name(%qp)] doesn't belong to any orgs or suborgs.})])],[u(fun`msg,%#,Who did you want to detach?)]
+&FUN`ORG.DISPLAYNAME $MR: Org Commands=[if(setr(o,org(orgnum,%0)),[sql(update orgsys_orglist set displayname='[sqlescape(%1)]' where id=%qo)][u(fun`msg,%#,{Display name for [org(orgname,%qo)] set to [sql(select displayname from orgsys_orglist where id=%qo)].})],[u(fun`msg,%#,That is not a valid org.)])]
+&FUN`ORG.JOIN $MR: Org Commands=if(%2,sql({insert into orgsys_membership (playerid, org, status) values ('%0', %1, 'MAIN')}),sql({insert into orgsys_membership (playerid, org) values ('%0', %1)}))
+&FUN`ORG.NEWMO $MR: Org Commands=[if(or(org(orgnum,%0),org(orgnum,%1)),[u(fun`msg,%#,That's an invalid org name or alias.)],[sql({insert into orgsys_orglist (name, shortname, displayname, orgtype) values ('[sqlescape(%0)]', '[sqlescape(%1)]', '[sqlescape(%0)]', 'MO')})][if(setr(o,org(orgnum,%1)),[u(fun`msg,%#,{Masterorg [org(orgname,%qo)] created with alias '%1'.})],[u(fun`msg,%#,Masterorg not created.)])])]
+&FUN`ORG.NEWSO $MR: Org Commands=[if(not(sql(SELECT name FROM orgsys_orglist where name='%0')),sql(INSERT INTO orgsys_orglist (name,parentorg,orgtype) VALUES ('[sqlescape(%0)]',%1,'SO'))[nspemit(%#,u(fun`msg,%#,{New Suborg created \(%0\) and attached to org \(%1\)}))])]
+&FUN`ORG.PLAYERS $MR: Org Commands=[nspemit(%#,{[header(,Players Listing,org(orgdname,%0))]%R%R[ansi(hG,[align(>18 15 28 -13,Rank, Name, Position, Last Online,,[ansi(X,%b)])])]%R[iter(sortkey(sort2,org(players,%0),n),[setq(x,[firstof(first(setinter(org(suborgs,%0),org(orgs,%i0))),%0)])][align(>18 15 28 13,[rfield(rankname(%i0),18)],name(%i0),org(position,name(%i0)),[if(gte(conn(%i0),1),ansi(hg,Online),[setq(Z,sub(secs(),convtime(get(%i0/lastlogout))))][ansi(switch(%qZ,<86400,g,<604800,ny,<2592000,nr,hr),[first(timestring(%qZ))])]%b[if(hasflag(%i0,ON-VACATION),LOA)])])],,%R)]%R%R[header(,%?,ictime())]%R})]
+&FUN`ORG.RANKS $MR: Org Commands=[if(sql(SELECT COUNT(*) FROM orgsys_ranks WHERE rank=[sqlescape(%1)] AND org=%0),sql({UPDATE orgsys_ranks SET male='[sqlescape(%2)]', female='[sqlescape(%3)]' WHERE rank=[sqlescape(%1)] AND org=%0})[nspemit(%#,prefix({Rank %1: Male (%2), Female (%3) Updated for [ansi(hy,org(orgname,%0))]},Gx,OrgSys))],sql({INSERT INTO orgsys_ranks (org,rank,male,female) VALUES (%0,%1,'[sqlescape(%2)]','[sqlescape(%3)]')})[nspemit(%#,prefix({New Rank %1: Male (%2), Female (%3) for [ansi(hy,org(orgname,%0))] created},Gx,OrgSys))])]
+&FUN`ORG.REMOVE $MR: Org Commands=sql({delete from orgsys_membership where playerid='%0' and org=%1})
+&FUN`ORG.REMOVE1 $MR: Org Commands=[setq(p,getplayer(%0))][setq(o,org(orgnum,%1))][switch([t(%qp)][t(%qo)],11,[if(match(sql(select orgtype from orgsys_orglist where id=%qo),MO),[switch([t(match(org(morg,%qp),%qo))][t(org(orgs,%qp))],10,[u(fun`msg,%#,{[name(%qp)] removed from [org(orgname,%qo)].})][u(fun`msg,%qp,{You have been removed from [org(orgname,%qo)].})][u(fun`org.remove,%qp,%qo)],0?,[u(fun`msg,%#,{[name(%qp)] doesn't belong to that masterorg.})],?1,[u(fun`msg,%#,{Remove [name(%qp)]'s suborgs or use 'org detach' first.})])],[switch([t(match([org(orgs,%qp)],%qo))][t(org(morg,%qp))],11,[u(fun`msg,%#,{[name(%qp)] removed from [org(orgname,%qo)].})][u(fun`msg,%qp,{You have been removed from [org(orgname,%qo)].})][u(fun`org.remove,%qp,%qo)],0?,[u(fun`msg,%#,{[name(%qp)] doesn't belong to [org(orgname,%qo)].})],?0,[u(fun`msg,%#,{[name(%qp)] does not have a masterorg set.})])])],0?,[u(fun`msg,%#,That character could not be found.)],?0,[u(fun`msg,%#,What suborg did you mean?)])]
+&FUN`ORG.RENAME $MR: Org Commands=[if(setr(o,org(orgnum,%0)),[sql(update orgsys_orglist set name='[sqlescape(%1)]' where id=%qo)][u(fun`msg,%#,{Display name for [org(orgname,%qo)] set to %1.})],[u(fun`msg,%#,That is not a valid org.)])]
+&FUN`ORG.STATUS $MR: Org Commands=[setq(o,org(orgnum,secure(%0)))][setq(s,switch(secure(%1),op*,OPEN,cl*,CLOSED,oo*,OOC,np*,NPC,#-1 STATUS MUST BE OPEN CLOSED OOC NPC))][switch([t(%qo)][t(%qs)],11,[sql(update orgsys_orglist set status='%qs' where id=%qo)][u(fun`msg,%#,{[org(orgname,%qo)] is now set to %qs.})],0?,[u(fun`msg,%#,That is not a valid org.)],?0,[u(fun`msg,%#,{Status types can be OPEN, CLOSED, OOC, or NPC.})])]
+&FUN`ORG.TRANSFER $MR: Org Commands=[setq(p,getplayer(%0))][setq(o,org(orgnum,%1))][setq(m,org(morg,%qp))][switch([t(%qp)][t(%qo)][t(match(%qm,%qo))],110,[switch([sql(select orgtype from orgsys_orglist where id=%qo)],MO,[u(fun`org.remove,%qp,%qm)][u(fun`org.join,%qp,%qo)][u(fun`msg,%#,{[name(%qp)] has been transferred to [org(orgname,%qo)].})][u(fun`msg,%qp,{You have been transferred to [org(orgname,%qo)].})],[u(fun`msg,%#,{[org(orgname,%qo)] is not a masterorg.})])],0??,[u(fun`msg,%#,That player could not be found.)],?0?,[u(fun`msg,%#,What org did you want to transfer to?)],??1,[u(fun`msg,%#,{[name(%qp)] already belongs to [org(orgname,%qo)]})])]
+&FUN`PLANETS $MR: Org Commands=[if(setr(B,sql({SELECT objectid FROM orgsys_spaceobjects WHERE orgid=%0 AND objecttype='planet'},~,|)),%r[u(f_header,Planet Listing)]%r[ansi(g,[ansi(Gx,ljust(Name,21))]%b[ansi(Gx,center(C,1))]%b[ansi(Gx,ljust(Location,32))]%b[ansi(Gx,ljust(Race,10))]%b[ansi(Gx,rjust(Population,12))])]%r%r[iter(sortkey(space_object_sort,%qB,,~),[iter(u(%i0/population),[if(match(inum(0),1),[ansi(hw,lfield(name(%i1),21))]%b[center(u(%i1/class),1)]%b[lfield(u(l_location,%i1),32)]%b,[space(56)]%b)][lfield(u(rest(%i0)/racename),10)]%b[rjust(first(%i0),12)],|,%r)],~,%r)]%r%r[u(f_footer)]%r,[u(f_msg,No [ansi(hy,name(%0))] planets to display.)])]
+&FUN`POSITION $MR: Org Commands=[sql(update orgsys_membership set position='[sqlescape(%3)]' where org='%2' and playerid='%1')][u(%!/fun`msg,%0,You set the [ansi(hw,[org(orgname,%2)])] position for [name(%1)] to [ansi(hy,[org(position,%1,org(orgname,%2))])].)][u(%!/fun`msg,%1,[name(%0)] sets your position in [ansi(hw,[org(orgname,%2)])] to [ansi(hy,[org(position,%1,org(orgname,%2))])].)]
+&FUN`PROMOTE $MR: Org Commands=[setq(0,org(ranknum,%0,%2),1,org(ranknum,%1,%2))][if(cor(orflags(%0,Wr),gt(sub(%q0,%q1),1)),[if(sql(select rank from orgsys_ranks where org='%2' and rank='[add(%q1,1)]'),[sql(update orgsys_membership set rank='[add(%q1,1)]' where org='%2' and playerid='%1')][u(%!/fun`msg,%0,You promote [name(%1)] to rank [u(#5824/fun.org`rank,%1,%2)].)][u(%!/fun`msg,%1,[name(%0)] promotes you to rank [u(#5824/fun.org`rank,%1,%2)].)],u(%!/fun`msg,%0,There is not a higher rank to promote to.))],u(%!/fun`msg,%0,You can't promote to that rank.))]
+&FUN`SHIPS $MR: Org Commands=[if(setr(B,sql({SELECT objectid FROM orgsys_spaceobjects WHERE orgid=%0 AND objecttype='ship'},~)),[u(f_header,Ship Listing)]%r[align(20 14 4 10 30,ansi(hg,Name),ansi(hg,Class),,ansi(hg,Status),if(orflags(%#,Wr),ansi(hg,Location)))]%r[iter(revwords(sortkey(space_object_sort,%qB,,~),~),u(fun`ships`table,%i0),~,%r)]%r%r[u(f_footer)],u(f_msg,No [ansi(hy,name(%qa))] ships to display.))]
+&FUN`SHIPS`TABLE $MR: Org Commands=align(20 14 4 10 27,name(%0),u(%0/class),[u(%0/crew_required)],u(l_status,%0),[if(orflags(%#,Wr),squish(u(l_location,%0))%b([sdb(get,u(%0/sdb),space)]))])
+&FUN`SINFO $MR: Org Commands=[setq(A,spacenum(%0))][if(%qA,[setq(B,toolkit(space,coords,name(%qA)))][setq(C,owner(first(lsearch(all,type,room,zone,%qA))))][setq(D,morg(%qA))]%r[u(f_header,[name(%qA)] Info)]%r[rjust(ansi(h,Name:),10)]%b[ljust([name(%qA)]\(%qA\),30)][rjust(ansi(h,Class:),10)]%b[u(%qA/class)]%r[rjust(ansi(h,Type:),10)]%b[ljust(u(%qA/type),30)][if(orflags(%#,Wr),[rjust(ansi(h,Location:),10)]%b[u(l_coords,%qa)])]%r[rjust(ansi(h,Owner:),10)]%b[ljust(if(%qD,name(%qD),None),30)][if(orflags(%#,Wr),[rjust(ansi(h,Coords:),10)]%b%qB)]%r[if(orflags(%#,Wr),[rjust(ansi(h,Builder:),10)]%b[ljust(if(%qC,[name(%qC)] \(%qC\),None),30)]%r,)]%r[rjust(ansi(h,Count %bDBUsage),25)]%r[rjust(ansi(r,Rooms:),10)]%b[rjust(words(lsearch(all,type,room,zone,%qA)),5)]%b[rjust(lmath(add,iter(lsearch(all,type,room,zone,%qA),objmem(##))),8)]%r[rjust(ansi(r,Exits:),10)]%b[rjust(words(lsearch(all,type,exit,zone,%qA)),5)]%b[rjust(lmath(add,iter(lsearch(all,type,exit,zone,%qA),objmem(##))),8)]%r[rjust(ansi(r,Objects:),10)]%b[rjust(words(lsearch(all,type,thing,zone,%qA)),5)]%b[rjust(lmath(add,iter(lsearch(all,type,thing,zone,%qA),objmem(##))),8)]%r[rjust(ansi(r,Players:),10)]%b[rjust(words(lsearch(all,type,player,zone,%qA)),5)]%b[rjust(lmath(add,iter(lsearch(all,type,player,zone,%qA),objmem(##))),8)]%r%r[u(f_footer)]%r,nspemit(%#,Invalid Space-Object))]
+&FUN`SUBORGLIST $MR: Org Commands=%b%b[ansi(hw,[org(orgname,%0)])]%R[iter([sql(select id from orgsys_orglist where parentorg=%0)],[repeat(%b,6)][org(orgname,[itext(0)])][iter(sql(select id from orgsys_orglist where parentorg=[itext(0)]),%R[repeat(%b,10)][org(orgname,[itext(0)])][iter(sql(select id from orgsys_orglist where parentorg=[itext(0)]),%R%b%b[repeat(%b,14)][org(orgname,[itext(0)])][iter(sql(select id from orgsys_orglist where parentorg=[itext(0)]),%R%b%b[repeat(%b,18)][org(orgname,[itext(0)])][iter(sql(select id from orgsys_orglist where parentorg=[itext(0)]),%R%b%b[repeat(%b,22)][org(orgname,[itext(0)])],,%R)],,%R)],,%R)],,)],,%R)]
+&FUN`UNKNOWN $MR: Org Commands=[setq(T,switch(%0,ships,1|ship,bases,2|base,planets,3|planet,1|ship))][setq(S,iter(sql({SELECT objectid FROM orgsys_spaceobjects WHERE objecttype='[after(%qT,|)]'}),before(%i0,:),,|))][setq(L,setdiff(squish(spaceobj(first(%qT,|)),|),%qS,|,,%b))][u(f_header,Ship Listing)]%r[align(20 14 4 10 30,ansi(hg,Name),ansi(hg,Class),,ansi(hg,Status),ansi(hg,Location))]%r[setq(L,iter(%qL,if(hasflag(%i0,SPACE-OBJECT),%i0)))][iter(%qL,u(fun`unknown`table,%i0),,%r)]%r%r[u(f_footer)]
+&FUN`UNKNOWN`TABLE $MR: Org Commands=align(22 18,name(%0),u(%0/class))
+&LOCK.ADMIN $MR: Org Commands=if(orflags(%#,Wr),1,0[u(fun`msg.unauthorized,%#)])
+&LOCK.HELPER $MR: Org Commands=if(or(orflags(%#,Wr),hasflag(%#,Helper)),1,0[u(fun`msg.unauthorized,%#)])
+&LOCK.MANAGER $MR: Org Commands=if(or(orflags(%#,Wr),t(lmath(add,iter(org(parentchainbyname,sorgname(if(sorg(%0),sorg(%0),morg(%0)))),if(sql(SELECT COUNT(ID) FROM orgsys_managers WHERE orgid=%i0 AND playerid='[sqlescape(%:)]'),1,0))))),1,0)
+&LOCK.ROYAL $MR: Org Commands=if(orflags(%#,Wr),1,0[u(fun`msg.unauthorized,%#)])
+&LOCK.WIZARD $MR: Org Commands=if(hasflag(%#,Wizard),1,0[u(fun`msg.unauthorized,%#)])
+&VERSION $MR: Org Commands=OrgSYS [ansi(g,v3)].0
+
+@create $tk: org
+@link $tk: org = #0
+@set $tk: org = OPAQUE
+@set $tk: org = WIZARD
+@set $tk: org = SAFE
+@set $tk: org = NO_COMMAND
+&FUN $tk: org=
+&FUN.ORG $tk: org=
+&FUN.ORG`GETCHAR $tk: org=localize([setq(p,firstof(pmatch(%0),locate(%#,%0,PFXm*),locate(%#,%0,TFXm*),#-1))][if(%qp,if(or(cor(hastype(%qp,player),and(hastype(%qp,thing),hasflag(%qp,NPC))),and(hastype(%qp,thing),hasflag(%qp,sentient))),objid(%qp),#-2 INVALID CHARACTER),#-1 INVALID CHARACTER)])
+&FUN.ORG`MAINSUB $tk: org=firstof(first(sql(select org from orgsys_membership where playerid='%0' and status='MAIN')),if(eq(words(setr(x,u(fun.org`orgs,%0))),1),%qx,#-2 NO MAIN SUBORG SELECTED))
+&FUN.ORG`ORGDNAME $tk: org=[firstof(sql(select displayname from orgsys_orglist where id=%0),#-1 INVALID ORG)]
+&FUN.ORG`ORGNAME $tk: org=[firstof(sql(select name from orgsys_orglist where id=%0),#-1 INVALID ORG)]
+&FUN.ORG`ORGNUM $tk: org=firstof(first(sql(SELECT id FROM orgsys_orglist WHERE shortname='[sqlescape(%0)]' OR name LIKE '[sqlescape(%0)]\%',|),|),#-1 NONE FOUND)
+&FUN.ORG`ORGS $tk: org=localize([setq(p,u(fun.org`getchar,%0))])[if(%qp,[setq(s,sql(select org from orgsys_membership where playerid='%qp'))][squish([iter(%qs,sql(select id from orgsys_orglist where orgtype='SO' AND id=##))])],#-1 INVALID CHARACTER)]
+&FUN.ORG`PLAYERS $tk: org=sql(select playerid from orgsys_membership where org=%0)
+&FUN.ORG`POSITION $tk: org=sql(select position from orgsys_membership where org='%1' and playerid='%0')
+&FUN.ORG`RANK $tk: org=[if(isnum(setr(r,sql(select rank from orgsys_membership where org='%1' and playerid='%0'))),sql(select [switch(u(%0/sex),f*,Female,Male)] from orgsys_ranks where org='%1' and rank='%qr'))]
+&FUN.ORG`RANKNUM $tk: org=sql(select rank from orgsys_membership where org='%1' and playerid='%0')
+&FUN.PARENTCHAIN $tk: org=if(setr(P,sql(select parentorg from orgsys_orglist where id=%0)),u(fun.parentchain,%qP))%0%b
+&FUN`ORG $tk: org=if(hasattr(me, tk.%0),u(me/tk.%0,%1,%2,%3,%4,%5,%6,%7,%8,%9),ansi(r,No such org function))
+@STARTUP $tk: org=@function org=me, fun`org
+@set $tk: org/STARTUP=no_command prefixmatch
+&TK.ALLPLAYERS $tk: org=squish([iter(org(suborgs,%0) %0,[setq(l,squish(%ql [setdiff(org(players,%i0),%ql)]))])]%ql)
+&TK.GETCHAR $tk: org=u(fun.org`getchar,%0)
+&TK.GETRACES $tk: org=sql({SELECT race FROM orgsys_races WHERE orgid='[sqlescape(%0)]'},~,|)
+&TK.GLOBALCLEANUP $tk: org=map(#lambda/if(not(hastype(\%0,PLAYER)),sql({DELETE FROM orgsys_membership WHERE playerid='\%0'})),sql({SELECT playerid FROM orgsys_membership}))
+&TK.HASRACE $tk: org=t(sql({SELECT COUNT(ID) FROM orgsys_races WHERE orgid='[sqlescape(%0)]' AND race='[sqlescape(objid(%1))]'}))
+&TK.LOCALCLEANUP $tk: org=map(#lambda/if(not(hastype(\%0,PLAYER)),sql({DELETE FROM orgsys_membership WHERE playerid='\%0'})),sql({SELECT playerid FROM orgsys_membership om INNER JOIN orgsys_orglist oo ON om.org=oo.id WHERE oo.shortname='[sqlescape(%0)]'}))
+&TK.MAINSUB $tk: org=localize([setq(p,u(fun.org`getchar,%0))][if(%qp,u(fun.org`mainsub,%qp),#-1 INVALID CHARACTER)])
+&TK.MASTERLIST $tk: org=sql({SELECT shortname, name FROM orgsys_orglist WHERE status='open' AND orgtype='MO' ORDER BY 'name' ASC},~,|)
+&TK.MORG $tk: org=[localize(if(%0,[if(setr(p,if(isdbref(%0),objid(%0),getplayer(%0))),[setinter(sql(select org from orgsys_membership where playerid='%qp'),sql(select id from orgsys_orglist where orgtype='MO'))],#-1 INVALID PLAYER)],#-1 INVALID PLAYER))
+&TK.ORGCHANNEL $tk: org=sql({SELECT org_channel FROM orgsys_orglist WHERE ID=%0},~,|)
+&TK.ORGMANAGER $tk: org=sql({SELECT COUNT(*) FROM orgsys_managers WHERE orgid=%0 AND playerID='[sqlescape(%1)]'},~,|)
+&TK.ORGDNAME $tk: org=u(fun.org`orgdname,%0)
+&TK.ORGNAME $tk: org=[if(isnum(%0),u(fun.org`orgname,%0),#-2 ORGNAME EXPECTS A NUMBER)]
+&TK.ORGNAMEBYALIAS $tk: org=sql({SELECT name FROM orgsys_orglist WHERE shortname='[sqlescape(%0)]'})
+&TK.ORGNUM $tk: org=u(fun.org`orgnum,%0)
+&TK.ORGS $tk: org=u(fun.org`orgs,%0)
+&TK.ORGZONE $tk: org=sql({SELECT org_zone FROM orgsys_orglist WHERE ID='%0'},~,|)
+&TK.PARENTCHAIN $tk: org=u(fun.parentchain,%0)
+&TK.PARENTCHAINBYNAME $tk: org=u(fun.parentchain,u(fun.org`orgnum,%0))
+&TK.PLAYERS $tk: org=[setq(o,if(isnum(%0),%0,u(fun.org`orgnum,%0)))][if(u(fun.org`orgname,%qo),u(fun.org`players,%qo),#-1 INVALID ORG)]
+&TK.POSITION $tk: org=localize([setq(p,u(fun.org`getchar,%0))][if(%qp,[if(%1,[setq(o,u(fun.org`orgnum,%1))][if(%qo,u(fun.org`position,%qp,%qo),#-1 INVALID ORG NAME)],[setq(o,u(fun.org`mainsub,%qp))][u(fun.org`position,%qp,%qo)])],#-1 INVALID CHARACTER)])
+&TK.RANK $tk: org=localize([setq(p,u(fun.org`getchar,%0))][if(%qp,[if(%1,[setq(o,u(fun.org`orgnum,%1))][if(%qo,u(fun.org`rank,%qp,%qo),#-1 INVALID ORG NAME)],[setq(o,u(fun.org`mainsub,%qp))][u(fun.org`rank,%qp,%qo)])],#-1 INVALID CHARACTER)])
+&TK.RANKNUM $tk: org=localize([setq(p,u(fun.org`getchar,%0))][if(%qp,[if(%1,[setq(o,u(fun.org`orgnum,%1))][if(%qo,u(fun.org`ranknum,%qp,%qo),#-1 INVALID ORG NAME)],[setq(o,u(fun.org`mainsub,%qp))][u(fun.org`ranknum,%qp,%qo)])],#-1 INVALID CHARACTER)])
+&TK.RANKS $tk: org=select rank, male, female from orgsys_ranks where org='%0'
+&TK.SPACEOBJECTORG $tk: org=sql({SELECT orgid FROM orgsys_spaceobjects WHERE objectID='%0'},~,|)
+&TK.STATUS $tk: org=sql({SELECT status FROM orgsys_orglist WHERE shortname='[sqlescape(%0)]' OR name='[sqlescape(%0)]'})
+&TK.SUBORGS $tk: org=[u(fun`getsuborgs,%0)]
+&TK.VALIDORG $tk: org=sql({SELECT COUNT(*) FROM orgsys_orglist WHERE shortname='[sqlescape(%0)]'})
+&TK.VALIDORGBYNUM $tk: org=sql({SELECT COUNT(*) FROM orgsys_orglist WHERE id='[sqlescape(%0)]'})

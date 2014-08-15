@@ -1,0 +1,65 @@
+[ST:F WHO]
+
+&CMD`WHO $MR: OOC Player Commands=$who:th nspemit(%#,u(#18608/F.WHO`WHO))
+&F.WHO $--:@fing and who Resource=
+&F.WHO`COLHEADER $--:@fing and who Resource=[ansi(Rh,align(1 30 5 22 >8 >8 ,T,Player,Alias,Empire,Online,Status,%b,ansi(X,%b)))]
+&F.WHO`COLHEADER.ADMIN $--:@fing and who Resource=[setq(c,hR)][align(1(%qc) 19(%qc) 5(%qc) 22(%qc) >8(%qc) >8(%qc) >3(%qc),S,Player,Alias,Affiliation,Online,Idle,IC,%b,ansi(X,%b))][if(gte(width(%#),84),[if(gte(width(%#),115),%b[ansi(%qc,ljust(Location,sub(width(%#),73)))],%b[ansi(%qc,Loc%b%b%b)])])]
+&F.WHO`FOOTER $--:@fing and who Resource=[header(%?,Online Record:[ansi(hw,get(#0/MUSH.ONLINE.RECORD))]%b%bUptime Record:[ansi(hw,extract(squish(timestring(get(#0/MUSH.UPTIME.RECORD))),1,3))],u(f.who`ver),width(%#))]
+&F.WHO`HEADER $--:@fing and who Resource=%r[header(u(f.mudname),[if(not(isadmin(%#)),[ansi(w,Connected:)][ansi(wXi,%b[words(iter(%0,if(not(isstaff(##)),##)))]%b)][if(not(match(Doing,setr(w,poll()))),ansi(hy,lfield(poll(),32)))],[ansi(w,Players:)][ansi(wXi,%b[words(iter(%0,if(not(isstaff(##)),##)))]%b)]%b[ansi(w,Admin:)][ansi(wXi,%b[words(iter(%0,if(isadmin(##),##)))]%b)]%b[ansi(w,Builders:)][ansi(wXi,%b[words(iter(%0,if(haspower(##,builder),##)))]%b)])],Uptime: [u(f.who`uptime)],width(%#))]
+&F.WHO`LIST $--:@fing and who Resource=u(F.WHO`LIST`[switch([orlflags(%#,WIZARD ROYALTY)][get(%#/whosort)],*2,NEW,13,BITS,14,LOC,*5,org,DEFAULT)])
+&F.WHO`LIST2 $--:@fing and who Resource=[setr(l,[if([and([orlflags(%#,WIZARD ROYALTY)],[not([hasflag(%#,myopic)])])],[setunion([lwho()],)],[setunion([mwho()],)])])]
+&F.WHO`LIST3 $--:@fing and who Resource=sortby(f.who`sort.idle,u(f.who`list2))
+&F.WHO`LIST`ALPHA $--:@fing and who Resource=sortkey(alpha,u(f.who`list2))
+&F.WHO`LIST`BITS $--:@fing and who Resource=sortkey(bitsort,u(f.who`list2))
+&F.WHO`LIST`DEFAULT $--:@fing and who Resource=u(F.WHO`LIST`ORG)
+&F.WHO`LIST`LOC $--:@fing and who Resource=sortkey(locationsort,u(f.who`list2))
+&F.WHO`LIST`NEW $--:@fing and who Resource=sortkey(staffsort,u(f.who`list2))
+&F.WHO`LIST`ORG $--:@fing and who Resource=sortkey(orgsort,u(f.who`list2))
+&F.WHO`LIST`ORIG $--:@fing and who Resource=sort(u(f.who`list2),idle)
+&F.WHO`LOCATE.IDLE $--:@fing and who Resource=switch(1,eq(setr(i,idle(%0)),-1),ansi(r,DISCONNECTED),lte(%qi,600),ansi(g,ACTIVE),ansi(rh,IDLE) [ansi(hb,\( [ansi(nw,squish(timestring(idle(%0))))] \))])
+&F.WHO`ONLINE.IDLE $--:@fing and who Resource=align(>8 >8,extract(squish(timestring(conn(%0))),1,2),switchall(1,match(conn(%0),-1),ansi(r,DISCONNECTED),lte(idle(%0),600),ansi(g,ACTIVE),ansi(rh,IDLE)))
+&F.WHO`ONLINE.IDLE.IC $--:@fing and who Resource=align(>8 >8 >3,if(match(idle(%0),-1),ansi(r,Offline),extract(squish(timestring(conn(%0))),1,2)),if(match(idle(%0),-1),extract(squish(timestring(sub(secs(),convtime(xget(%0,LASTLOGOUT))))),1,2),extract(squish(timestring(idle(%0))),1,2)),if(hasflag(%0,ic),[ansi(hg,%bIC)],[ansi(Rx,OOC)]))
+&F.WHO`REMHIDDEN $--:@fing and who Resource=squish(iter(%0,if(not(or(hidden(##),isdark(##))),##)))
+&F.WHO`REMHIDDEN2 $--:@fing and who Resource=filter(#18608/f.who`filteradmin,%0)
+&F.WHO`ROWS $--:@fing and who Resource=[iter(%0,nspemit(%#,u(f.who`rows.table,##)),%b,)]
+&F.WHO`ROWS.ADMIN $--:@fing and who Resource=[iter(%0,nspemit(%#,[ansi(case(setr(a,admintype(%i0)),C,c,c,bh,K,b,w,hr,r,hy,k,y,x,hx,n,m,b,g,h,hc,hw),%qa%b[lfield([ansi([if(isdark(%i0),hx)][if(and(words(powers(%i0)),not(orflags(%i0,Wr))),u)],[name(%i0)][if(setr(l,get(%i0/lastname)),%b%ql)])],19)]%b)][ansi(y,[lfield(alias(%i0),5)])]%b[lfield(if(setr(m,morg(%i0)),org(orgdname,%qM)),22)]%b[u(f.who`online.idle.ic,%i0)][if(gte(width(%#),84),[if(gte(width(%#),115),%b[lfield([rjust(loc(%i0),6)]%b%b[lfield([ansi(nc,name(zone(loc(%i0))))],20)]%b%b[ansi(hw,name(loc(%i0)))],sub(width(%#),74))],%b[rjust(loc(%i0),6)])])]),%b,)]
+&F.WHO`ROWS.TABLE $--:@fing and who Resource=[if(not(isdark(%0)),[iter(%0,nspemit(%#,[ansi(case(setr(a,admintype(##)),C,c,c,bh,K,b,w,hr,r,hy,k,y,x,hx,b,g,h,hc,hw),[case(%qa,n,m,%qa)]%b[lfield([ansi([if(isdark(##),hx)],[name(##)][if(setr(l,get(##/lastname)),%b%ql)])],30)]%b)][ansi(y,[lfield(alias(##),5)])]%b[lfield(if(setr(m,morg(##)),org(orgdname,%qM)),22)]%b[u(f.who`online.idle,##)])
+&F.WHO`SORT $--:@fing and who Resource=comp([morg(first(org(orgs,%0),|))][rjust(conn(%0),6,0)],[morg(first(org(orgs,%1),|))][rjust(conn(%1),6,0)])
+&F.WHO`SORT.IDLE $--:@fing and who Resource=comp(idle(%0),idle(%1),N)
+&F.WHO`UPTIME $--:@fing and who Resource=extract(squish(timestring(sub(secs(),convtime(starttime())))),1,3)
+&F.WHO`VER $--:@fing and who Resource=[ansi(hc,ST:F Who)] v[ansi(nc,2.5)]
+&F.WHO`WHO $--:@fing and who Resource=[setq(a,[and([isadmin(%#)],[not([haspower(%#,builder)])],[not([hasflag(%#,myopic)])])])][setq(9,[u(F.WHO`LIST,%0)])][nspemit(%#,u(F.WHO`HEADER,%q9)%r)][nspemit(%#,u(F.WHO`COLHEADER[if(%qa,.ADMIN)],%q9)%r)][u(F.WHO`ROWS[if(%qa,.ADMIN)],%q9)][nspemit(%#,%r[u(F.WHO`FOOTER)]%r)]
+
+[ST:F FINGER]
+&CMD`FING $MR: OOC Player Commands=$^(fing|@fing|\+fing|\$fing|@finger|finger|\+finger|$finger)(?\: (.+))?$:@assert %2={@nspemit %#=u(#18608/f.fing`self,%#)};@assert [setr(p,getplayer(switch(%2,me,%#,%2)))]={@nspemit %#=ansi(r,"%2" is not a valid player.)};@nspemit %#=u(#18608/f.fing`fing,%qp,%#);@assert get(%qP/FING_NOTIFY);@assert hasattrval(%qP, FING_NOTIFY_MSG)={@switch isadmin(%#)=0,@nspemit %qP=ansi(nc,{You were @fingered by [ansi(hw,name(%#))].})};@nspemit %qP=u(%qP/FING_NOTIFY_MSG,%n)
+@set $MR: OOC Player Commands/CMD`FING=regexp
+&F.FING $--:@fing and who Resource=This stores all the FINGER functions
+&F.FING`ALTS $--:@fing and who Resource=%r%r[ansi(nc,rjust(Alts,12))][ansi(hx,%b:%b)][itemize(get(%0/ALTS))]
+&F.FING`ELSE $--:@fing and who Resource=[u(f.fing`header,%0)][u(f.fing`first,%0)][if(setr(N,note(%0)),%r%r%qN)][u(f.fing`footer,%0)]
+&F.FING`FING $--:@fing and who Resource=[setq(s,isadmin(%#))][if(cand([cor(haspower(%0,see_all),%qs)],[get(%0/fing_notify)],[not(andflags(%#,WD))]),[nspemit(%#,ansi(nc,{You were @fingered by [ansi(hw,name(%#))].}))])][setq(f,switch([and(hasflag(%0,W),hasflag(%#,Duke))][Isadmin(%#)][strmatch(%#,%0)][strmatch(morg(%#),morg(%0))],1???,wizpass,?1??,roy,?01?,self,?001,sameorg,?000,else))][u(f.fing`%qf,%0)]
+&F.FING`FIRST $--:@fing and who Resource=[setq(a,>12 1 <26 >10 1 <26)][align(%qa,ansi(c,Name),ansi(hx,:),ansi(w,squish([get(%0/firstname)] [name(%0)] [get(%0/lastname)])),ansi(c,Aliases),ansi(hx,:),ansi(w,itemize(get(%0/alias),;)))]%r[align(%qa,ansi(c,Created),ansi(hx,:),ansi(w,ctime(%0)),ansi(c,Gender),ansi(hx,:),ansi(w,get(%0/sex)))]%r[align(%qa,ansi(c,Local Time),ansi(hx,:),ansi(w,first(ztime(%0),\,) \([default(%0/timezone,MUSH)]\)),ansi(c,Bloat),ansi(hx,:),ansi(w,playermem(%0) bytes))]
+&F.FING`FOOTER $--:@fing and who Resource=%r%r[setr(8,%? [ansi(Cx,:)]%b[switch([hasflag(%0,Wizard)][hasflag(%0,Royalty)][hasflag(%0,Duke)][haspower(%0,Builder)][hasflag(%0,1337054URU5)],1????,[ansi(rh,Wizard)],01???,[ansi(yh,Royalty)],001??,[ansi(gh,Duke)],0001?,[ansi(c,Builder)],00001,[ansi(mh,1337054URU5)])])][rjust([if(and(isconn(%0),not(hasflag(%0,dark))),[ansi(hw,Idle)]%b[edit(etimefmt($2H:$2M:$2S,idle(%0)),:,ansi(xh,:))],ansi(r,Offline))]%b[ansi(Cx,:)],sub(max(width(%#),45),strlen(%q8)))]%R
+&F.FING`FOURTH $--:@fing and who Resource=%r%r[ansi(c,rjust(Comments,12))]%b[ansi(xh,:)]%b[ansi(w,get(%0/comment))]
+&F.FING`HEADER $--:@fing and who Resource=%r[setr(9,[ansi(w,@FingSYS)]%b[ansi(c,v1)][ansi(w,.4)]%b[ansi(Cx,:)]%b[ansi(y,name(%0))]%b[ansi(Wx,%b%0%b)])]%b[rjust([if(cor(not(isconn(%0)),hasflag(%0,dark)),[ansi(r,Offline [etimefmt($1Dd $2H:$2M:$2S,sub(secs(),convtime(default(%0/lastlogout,xget(%0,LAST)))))])],[ansi(hw,Online)]%b[edit(etimefmt($2H:$2M:$2S,sub(secs(),convtime(get(%0/last)))),:,ansi(xh,:))])]%b[ansi(Cx,:)],sub(max(width(%#),45),inc(strlen(%q9))))]%r%r
+&F.FING`ROY $--:@fing and who Resource=[u(f.fing`header,%0)][u(f.fing`first,%0)][u(f.fing`second,%0)][u(f.fing`third,%0)][u(f.fing`alts,%0)][u(f.fing`fourth,%0)][if(setr(N,note(%0)),%r%r%qN)][u(f.fing`footer,%0)]
+&F.FING`SAMEORG $--:@fing and who Resource=[u(f.fing`header,%0)][u(f.fing`first,%0)][u(f.fing`second,%0)][if(setr(N,note(%0)),%r%r%qN)][u(f.fing`footer,%0)]
+&F.FING`SECOND $--:@fing and who Resource=%r%r[setq(a,>12 1 <26 >10 1 <26)][align(%qa,ansi(c,Faction),ansi(hx,:),ansi(w,if(setr(M,morg(%0)),morgname(%qM),None)),ansi(c,Org),ansi(hx,:),ansi(w,morgname(org(mainsub,%0))))]%r[align(%qa,ansi(c,Rank),ansi(hx,:),ansi(w,rankname(%0)),ansi(c,Position),ansi(hx,:),ansi(w,org(position,name(%0))))]%r[align(%qa,ansi(c,Race),ansi(hx,:),ansi(w,u([race(%0)]/racename)),ansi(c,Health),ansi(hx,:),ansi(w,[vit(%0)]%%))]
+&F.FING`SELF $--:@fing and who Resource=[u(f.fing`header,%0)][u(f.fing`first,%0)][u(f.fing`second,%0)][u(f.fing`third,%0)][if(setr(N,note(%0)),%r%r%qN)][u(f.fing`footer,%0)]
+&F.FING`THIRD $--:@fing and who Resource=%r%r[setq(c,ansi(xh,:))][align(>12 1 <52,ansi(c,Lastsite),%qc,ansi(w,get(%0/lastsite)))]%r[align(>12 1 <26,ansi(c,E-mail),%qc,ansi(w,get(%0/email)))]%r[align(>12 1 <26 >10 1 <26,ansi(c,Last On),%qc,ansi(w,get(%0/last)),ansi(c,Last Off),%qc,ansi(w,get(%0/lastlogout)))]
+&F.FING`WIZPASS $--:@fing and who Resource=[u(f.fing`header,%0)][u(f.fing`first,%0)][u(f.fing`second,%0)][u(f.fing`third,%0)][u(f.fing`alts,%0)]%r%r[ansi(c,rjust(Comments,12))]%b[ansi(xh,: [ansi(r,You are not authorised to access that password.)])][if(setr(N,note(%0)),%r%r%qN)][u(f.fing`footer,%0)]
+
+[ST:F EWHO]
+&CMD`EWHO $MR: OOC Player Commands=$^\+?ewho$:th [nspemit(%#,[u(#18608/f.ewho`ewho)])]
+@set $MR: OOC Player Commands/CMD`EWHO=regexp
+&F.EWHO $--:@fing and who Resource=This stores all the EWHO functions
+&F.EWHO`COLHEADER $--:@fing and who Resource=[setq(c,hG)][ansi(%qc,align(>15 16 24 >8 >8 >3,Rank,Player, Position,Online,Idle,IC,%b,ansi(nxG,|)))]
+&F.EWHO`EWHO $--:@fing and who Resource=[setq(9,u(F.EWHO`LIST))][u(F.EWHO`HEADER,%q9)]%r%r[u(F.EWHO`COLHEADER,%q9)]%r[u(F.EWHO`ROWS,%q9)]%r%r[u(F.EWHO`FOOTER)]%r
+&F.EWHO`EWHO.ALL $--:@fing and who Resource=[setq(9,u(F.EWHO`LIST.ALL,%0))][u(F.EWHO`HEADER,%q9)]%r%r[u(F.EWHO`COLHEADER,%q9)]%r[u(F.EWHO`ROWS,%q9)]%r%r[u(F.EWHO`FOOTER)]%r
+&F.EWHO`EWHO.EMPIRE $--:@fing and who Resource=[setq(9,u(F.EWHO`LIST.any,%0))][u(F.EWHO`HEADER,%q9)]%r%r[u(F.EWHO`COLHEADER,%q9)]%r[u(F.EWHO`ROWS,%q9)]%r%r[u(F.EWHO`FOOTER)]%r
+&F.EWHO`FOOTER $--:@fing and who Resource=[header(%?,Player Zone:[if(match(zone(%#),#-1),ansi(xh,not set),[ansi(xh,#)][after([firstof(zone(%#),Unknown)],#)])],ansi(g,stripansi(ictime())),width(%#),Gx)]
+&F.EWHO`HEADER $--:@fing and who Resource=[header(u(f.misc`mudname),Connected:[ansi(Wx,%b[words(filter(#lambda/gte(conn(\%0),1),unique(sort(%0))))]%b)],[if(setr(m,org(orgname,morg(first(%0)))),%qm,Unknown Affiliation)],width(%#),Gx)]
+&F.EWHO`LIST $--:@fing and who Resource=[squish(iter(u(F.WHO`LIST),if(and(not(haspower(##,builder)),match(morg(##),morg(%#))),##)))]
+&F.EWHO`LIST.ALL $--:@fing and who Resource=[setq(l,revwords(sort(org(allplayers,%0),conn)))][munge(#lambda/\%0,[iter(%ql,[idle(##)])],%ql)]
+&F.EWHO`LIST.ANY $--:@fing and who Resource=[setq(l,setinter(org(allplayers,%0),lwhoid()))][munge(#lambda/sort(\%0),[iter(%ql,[idle(##)])],%ql)]
+&F.EWHO`ROWS $--:@fing and who Resource=[iter(sortkey(#lambda/idle(\%0),%0),u(f.ewho`rows.table,##),%b,%r)]
+&F.EWHO`ROWS.TABLE $--:@fing and who Resource=align(>15 16 24 21,mid(rankname(%0),0,15),mid([squish([u(%0/firstname)]%b[ansi(hw,name(%0))]%b[u(%0/lastname)])],0,16),mid(org(position,%0),0,24),u(f.who`online.idle.ic,%0))

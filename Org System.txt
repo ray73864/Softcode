@@ -1,0 +1,48 @@
+/* STF Org System */
+
+Database Structure:
+
+	- Tables
+		- orgsys_orglist
+			- ID (integer)
+			- Name (character)
+			- Alias (character)
+			- Status (character)
+			- LeftID (integer)
+			- RightID (integer)
+			- Invite_Only (logical)
+
+		- orgsys_membership
+			- ID (integer)
+			- PlayerID (character)
+			- OrgID (integer)
+			- DefaultOrg (logical)
+			- Org_Manager (logical)
+
+Org System Commands:
+
+	- Admin Commands
+		- Org Creation
+		- Org Deletion
+		- Status Updating
+		- Org Naming
+		- Org Alias
+		- Org Restructuring (Changing suborg parents, etc...)
+		- Set player as org manager
+		- Set players default org
+		- List all empires
+		- List all suborgs
+
+	- Manager / Admin Commands
+		- Remove player from org
+		- Invite player to org
+		- Transfer player from org to org
+
+	- Member Commands
+		- List suborgs
+
+	- Player Commands
+		- Send org invite
+		- List empires
+
+		
