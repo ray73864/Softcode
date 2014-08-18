@@ -19,6 +19,13 @@ Database Structure:
 			- DefaultOrg (logical)
 			- Org_Manager (logical)
 
+		- orgsys_ranks
+			- ID
+			- Rank_Number
+			- OrgID
+			- Male_Rank
+			- Female_Rank
+
 Org System Commands:
 
 	- Admin Commands
@@ -37,6 +44,8 @@ Org System Commands:
 		- Remove player from org
 		- Invite player to org
 		- Transfer player from org to org
+		- Promote player to rank
+		- Demote player to rank
 
 	- Member Commands
 		- List suborgs
